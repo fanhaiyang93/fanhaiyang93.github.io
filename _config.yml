@@ -7,7 +7,7 @@ description: "Every failure is leading towards success."
 keyword: "MFAN, 范海洋的博客, fanhaiyang, 范海洋, data mining, hive,spark"
 url: "http://fanhaiyang93.github.io"          # your host, for absolute URL
 baseurl: ""      # for example, '/blog' if your blog hosted on 'host/blog'
-github_repo: #"https://github.com/qiubaiying/qiubaiying.github.io.git" # you code repository
+github_repo: #"" # you code repository
 
 # Sidebar settings
 sidebar: true                           # whether or not using Sidebar.
@@ -18,12 +18,12 @@ sidebar-avatar: img/avatar_g.jpg    # use absolute URL, seeing it's used in both
 
 # SNS settings
 RSS: false
-# weibo_username:     qiubaiying
+# weibo_username:
 zhihu_username:     xxxx
 github_username:    fanhaiyang93
 facebook_username:  xxxx
 jianshu_username:   xxxx
-#twitter_username:   qiubaiying
+#twitter_username:
 
 
 
@@ -57,7 +57,7 @@ kramdown:
 
 # 评论系统
 # Disqus（https://disqus.com/）
-# disqus_username: qiubaiying
+# disqus_username:
 
 # Gitalk
 gitalk:
