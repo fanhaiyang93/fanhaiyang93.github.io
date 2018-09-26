@@ -37,105 +37,109 @@ Linux系统文件中常用属性为以下内容：名称，大小，权限，属
 
 1. 以文件名查找
 
-* -name pattern : 以文件名查找
-* -iname pattern: 不区分文件名大小写，只支持glob风格的查找方式：*,？,[],[^]
-* -regex pattern: 基于正则表达式查找文件，精确匹配文件名
+    * -name pattern : 以文件名查找
+    * -iname pattern: 不区分文件名大小写，只支持glob风格的查找方式：*,？,[],[^]
+    * -regex pattern: 基于正则表达式查找文件，精确匹配文件名
 
 2. 以文件从属关系查找
 
-* -user USERNAME : 以用户名查找
-* -group GROUPNAME : 以组名查找
-* -uid UID :以UID号查找
-* -gid GID :以GID查找
-* -nouser : 查找没有属主的文件
-* -nogroup : 查找没有属组的文件
+    * -user USERNAME : 以用户名查找
+    * -group GROUPNAME : 以组名查找
+    * -uid UID :以UID号查找
+    * -gid GID :以GID查找
+    * -nouser : 查找没有属主的文件
+    * -nogroup : 查找没有属组的文件
 
 3. 以文件类型查找
-* -type TYPE : 以文件类型查找
 
-```
-f : 普通文件
-d : 目录文件
-b : 块设备文件
-c : 字符设备文件
-l : 连接文件
-s : 套接字文件
-p : 管道文件
-```
+    * -type TYPE : 以文件类型查找
+
+    ```
+    f : 普通文件
+    d : 目录文件
+    b : 块设备文件
+    c : 字符设备文件
+    l : 连接文件
+    s : 套接字文件
+    p : 管道文件
+    ```
     
 4. 根据文件大小查找
 
-* -size [+|-]SIZE : 以文件大小查询,大小包含K，M，G的单位
-
-```
--size 5M ： 精确查找大小为5M的文件，大小上面浮动稍微有偏差
--size -5M : 查询大小小于5M的文件
--size +5M : 查询大小大于5M的文件
-```
+    * -size [+|-]SIZE : 以文件大小查询,大小包含K，M，G的单位
+    
+    ```
+    -size 5M ： 精确查找大小为5M的文件，大小上面浮动稍微有偏差
+    -size -5M : 查询大小小于5M的文件
+    -size +5M : 查询大小大于5M的文件
+    ```
 
 5. 根据时间查找
 
-* -atime [+|-]TIME : 以访问时间（天）查找
-* -mtime [+|-]TIME : 以数据修改时间（天）查找
-* -ctime [+|-]TIME : 以元数据修改时间（天）查找
-* -amin [+|-]TIME : 以访问时间（分钟）查找
-* -mmin [+|-]TIME : 以数据修改时间（分钟）查找
-* -cmin [+|-]TIME : 以元数据修改时间（分钟）查找
-* -newer FILE : 以FILE文件为条件，判断比它新的文件
-
+    * -atime [+|-]TIME : 以访问时间（天）查找
+    * -mtime [+|-]TIME : 以数据修改时间（天）查找
+    * -ctime [+|-]TIME : 以元数据修改时间（天）查找
+    * -amin [+|-]TIME : 以访问时间（分钟）查找
+    * -mmin [+|-]TIME : 以数据修改时间（分钟）查找
+    * -cmin [+|-]TIME : 以元数据修改时间（分钟）查找
+    * -newer FILE : 以FILE文件为条件，判断比它新的文件
+    
 6. 根据权限查找
 
-* -perm MODE : 精确权限查找
-    find . -perm 644
-* -perm /MODE : 任何一类用户(u,g,o)中的任何一位(r,w,x)符合条件即满足，理解为或关系
-* -perm -MODE : 每一类用户(u,g,o)的权限中的每一位(r,w,x)同时符合条件即满足，理解为与关系
+    * -perm MODE : 精确权限查找
+        find . -perm 644
+    * -perm /MODE : 任何一类用户(u,g,o)中的任何一位(r,w,x)符合条件即满足，理解为或关系
+    * -perm -MODE : 每一类用户(u,g,o)的权限中的每一位(r,w,x)同时符合条件即满足，理解为与关系
 
 7. 组合条件测试
-* 与 : -a
 
-```angular2html
-默认组合逻辑，可以加-a，也可以取消，例：find . -type f -a -user mariadb，两个条件同时满足
-```
-
-* 或 : -o
-
-```angular2html
-可以加-o参数，例：find . -type f -o -nouser ,两个条件只满足一个即可
-```
-
-* 非 : -not 或者 !表示
-
-```angular2html
-find . -not -type f,不是普通文件
-find . ! -type f ,同上
-```
+    * 与 : -a
+    
+    ```angular2html
+    默认组合逻辑，可以加-a，也可以取消，例：find . -type f -a -user mariadb，两个条件同时满足
+    ```
+    
+    * 或 : -o
+    
+    ```angular2html
+    可以加-o参数，例：find . -type f -o -nouser ,两个条件只满足一个即可
+    ```
+    
+    * 非 : -not 或者 !表示
+    
+    ```angular2html
+    find . -not -type f,不是普通文件
+    find . ! -type f ,同上
+    ```
 
 8. 处理动作
 
-* -print : 默认为打印，不需要添加，输出入屏幕
-* -ls : 以ls长文件的格式形式输出
-* -delete : 删除查找到的文件
-* -fls /PATH/TO/SOMEFILE :把查询到的文件以ls详细信息格式保存到SOMEFILE文件中
-* -ok COMMAND {} \; : 查找到的文件传递给COMMAND命令，提每步都给用户提示确认操作
-* -exec COMMAND {} \; : 查找到的文件传递给COMMAND命令，直接修改完成，不给用户确认
->注意：find将查找到的文件路径一次性传递给后面的命令，但有很多的命令不能接受过长的参数，导致命令的执行失败，使用如下方式可避免此错误的发生：
-
-    find /etc -type f | xargs -i COMMAND ： -i参数是由find的结果传给xargs命令后，由-i指定结果代替符
+    * -print : 默认为打印，不需要添加，输出入屏幕
+    * -ls : 以ls长文件的格式形式输出
+    * -delete : 删除查找到的文件
+    * -fls /PATH/TO/SOMEFILE :把查询到的文件以ls详细信息格式保存到SOMEFILE文件中
+    * -ok COMMAND {} \; : 查找到的文件传递给COMMAND命令，提每步都给用户提示确认操作
+    * -exec COMMAND {} \; : 查找到的文件传递给COMMAND命令，直接修改完成，不给用户确认
+    >注意：find将查找到的文件路径一次性传递给后面的命令，但有很多的命令不能接受过长的参数，导致命令的执行失败，使用如下方式可避免此错误的发生：
+    ```angular2html
+       find /etc -type f | xargs -i COMMAND ： -i参数是由find的结果传给xargs命令后，由-i指定结果代替符
+    ```
+        
     
 9. 其他选项
 
-* 指定查找目录层级
-
-    -maxdepth NUM  指定最多搜索目录层级到NUM层
-    -mindepth NUM  指定最少搜索目录层级到NUM层
-
-* 查找空文件
-
-    find . -empty  查找当前目录下所有的空文件
+    * 指定查找目录层级
     
-* 排除符号连接
-
-    -follow
+        -maxdepth NUM  指定最多搜索目录层级到NUM层
+        -mindepth NUM  指定最少搜索目录层级到NUM层
+    
+    * 查找空文件
+    
+        find . -empty  查找当前目录下所有的空文件
+        
+    * 排除符号连接
+    
+        -follow
     
 **find命令使用示例**
 
@@ -185,7 +189,7 @@ find . ! -type f ,同上
 
 用xargs来配合find工作
 
->在使用find命令的-exec选项处理匹配到的文件时，find命令将所有匹配到的文件一起传递给exec执行。但有些系统对传递给exec的命令长度是有限制的，
+> 在使用find命令的-exec选项处理匹配到的文件时，find命令将所有匹配到的文件一起传递给exec执行。但有些系统对传递给exec的命令长度是有限制的，
 这样，在find命令运行几分钟之后，就会出现溢出错误。错误信息通常是”参数列太长”或”参数列溢出”。这就是xargs命令的用户所在，特别是与find命令一起使用
 find命令把匹配到的文件传递给xargs命令，而xargs命令每次只获取一部分文件而不是全部，不像-exec选项那样。
 这样它就可以先处理最先获取的那一部分文件，然后是下一批，并且如此继续下去。
@@ -201,10 +205,13 @@ find命令把匹配到的文件传递给xargs命令，而xargs命令每次只获
 >在进行系统维护时，我们经常遇到一种情况，即发现磁盘在不停地发生写现象，这时候我们要定位这个正在写的文件，可以选择建立一个文件，比如test
 然后用以下命令找出这个频繁写磁盘的文件(最好带上一些限制大小的参数来精确定位)
 
-    touch new1
-    touch new2
-    find / -newer new1 -o -path "/proc" -prune
-    找出比new1新的文件，由于/proc目录中的文件一直在变化，所以可以排除
+    ```angular2html
+        touch new1
+        touch new2
+        find / -newer new1 -o -path "/proc" -prune
+        找出比new1新的文件，由于/proc目录中的文件一直在变化，所以可以排除
+    ```
+    
     
 14. 在当前目录下寻找pl后缀的文件，不在scripts下寻找
 
