@@ -1,0 +1,1421 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据表对比SQL生成工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .progress-container {
+            margin-bottom: 30px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .mode-selector {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .mode-btn {
+            padding: 12px 30px;
+            margin: 0 10px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .mode-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .mode-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .section {
+            margin-bottom: 30px;
+            padding: 25px;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            background: #fafafa;
+        }
+
+        .section h3 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        textarea.form-control {
+            min-height: 200px;
+            resize: vertical;
+            font-family: 'Courier New', monospace;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .col {
+            flex: 1;
+        }
+
+        .api-section {
+            display: none;
+        }
+
+        .manual-section {
+            display: block;
+        }
+
+        /* 字段映射相关样式 */
+        #mappingContainer {
+            display: none;
+        }
+
+        .field-mapping-container {
+            position: relative;
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            min-height: 400px;
+        }
+
+        .field-list {
+            flex: 1;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px;
+            background: white;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .field-list h4 {
+            margin-bottom: 15px;
+            color: #333;
+            text-align: center;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .field-item {
+            padding: 10px;
+            margin-bottom: 8px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .field-item:hover {
+            background: #e3f2fd;
+            border-color: #2196f3;
+            transform: translateX(5px);
+        }
+
+        .field-item.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .field-name {
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .field-comment {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .mapping-lines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .mapping-line {
+            fill: none;
+            stroke: #667eea;
+            stroke-width: 2;
+            opacity: 0.7;
+        }
+
+        .mapping-line-primary {
+            stroke: #ff9800;
+            stroke-width: 3;
+            opacity: 0.9;
+        }
+
+        .mapping-list {
+            margin-top: 20px;
+        }
+
+        .mapping-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: white;
+        }
+
+        .mapping-item.primary {
+            border-color: #ff9800;
+            background: #fff8e1;
+        }
+
+        .result-container {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .sql-result {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        /* 自定义弹窗样式 */
+        .custom-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 30px;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .modal-content h3 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .modal-content p {
+            margin-bottom: 25px;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 10px;
+            }
+
+            .header {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            .row {
+                flex-direction: column;
+            }
+
+            .field-mapping-container {
+                flex-direction: column;
+                min-height: auto;
+            }
+
+            .modal-content {
+                width: 95%;
+                margin: 10% auto;
+                padding: 20px;
+            }
+
+            .modal-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 数据表对比SQL生成工具</h1>
+            <p>智能生成Hive表数据对比SQL，支持API获取表结构和手动输入两种模式</p>
+        </div>
+
+        <div class="content">
+            <!-- 进度条 -->
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressBar"></div>
+                </div>
+            </div>
+
+            <!-- 模式选择 -->
+            <div class="mode-selector">
+                <button class="mode-btn" id="apiModeBtn" onclick="switchMode('api')">API模式</button>
+                <button class="mode-btn active" id="manualModeBtn" onclick="switchMode('manual')">手动输入模式</button>
+            </div>
+
+            <!-- API模式 -->
+            <div class="api-section" id="apiSection">
+                <div class="section">
+                    <h3>📡 API配置</h3>
+                    <div class="alert alert-info">
+                        <strong>提示：</strong> 请确保API服务正常运行，并且已配置正确的数据库连接信息。
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <div class="form-group">
+                                <label for="apiUrl">API地址:</label>
+                                <input type="text" id="apiUrl" class="form-control" 
+                                       placeholder="http://localhost:8080/api/table-structure" 
+                                       value="http://localhost:8080/api/table-structure">
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="form-group">
+                                <label for="useProxy">使用代理:</label>
+                                <select id="useProxy" class="form-control">
+                                    <option value="false">否</option>
+                                    <option value="true">是</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3>🏷️ 表信息配置</h3>
+                    <div class="row">
+                        <div class="col">
+                            <div class="form-group">
+                                <label for="onlineTableName">线上表名:</label>
+                                <input type="text" id="onlineTableName" class="form-control" 
+                                       placeholder="例如: dim_pub_hr_empl_cho_cockpit_org_info_his_da">
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="form-group">
+                                <label for="testTableName">测试表名:</label>
+                                <input type="text" id="testTableName" class="form-control" 
+                                       placeholder="例如: dim_pub_hr_empl_cho_cockpit_org_test_info_his_da">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <button class="btn btn-primary" onclick="fetchTableStructures()">🔄 获取表结构</button>
+                        <button class="btn btn-secondary" onclick="loadExampleData()">📝 加载示例数据</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 手动输入模式 -->
+            <div class="manual-section" id="manualSection">
+                <div class="section">
+                    <h3>📝 建表语句输入</h3>
+                    <div class="alert alert-info">
+                        <strong>使用说明：</strong> 请分别输入线上表和测试表的完整建表语句（CREATE TABLE语句）
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <div class="form-group">
+                                <label for="onlineTableDDL">线上表建表语句:</label>
+                                <textarea id="onlineTableDDL" class="form-control" 
+                                          placeholder="请输入线上表的CREATE TABLE语句..."></textarea>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="form-group">
+                                <label for="testTableDDL">测试表建表语句:</label>
+                                <textarea id="testTableDDL" class="form-control" 
+                                          placeholder="请输入测试表的CREATE TABLE语句..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <button class="btn btn-primary" onclick="parseTableStructure()">🔍 解析表结构</button>
+                        <button class="btn btn-secondary" onclick="loadExampleDDL()">📝 加载示例DDL</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 字段映射配置 -->
+            <div id="mappingContainer">
+                <div class="section">
+                    <h3>🔗 字段映射配置</h3>
+                    <div class="alert alert-info">
+                        <strong>操作说明：</strong> 
+                        <br>1. 点击"自动映射同名字段"进行快速映射
+                        <br>2. 或者分别点击左右两侧的字段进行手动映射
+                        <br>3. 在映射列表中设置主键字段（用于关联对比）
+                        <br>4. 完成后点击"确认映射"进入下一步
+                    </div>
+                    
+                    <div class="text-center" style="margin-bottom: 20px;">
+                        <button class="btn btn-success" onclick="autoMapping()">🤖 自动映射同名字段</button>
+                        <button class="btn btn-secondary" onclick="clearMapping()">🗑️ 清除所有映射</button>
+                        <button class="btn btn-primary" onclick="confirmMapping()">✅ 确认映射</button>
+                    </div>
+
+                    <div class="field-mapping-container" id="fieldMappingContainer">
+                        <svg class="mapping-lines" id="mappingLines"></svg>
+                        
+                        <div class="field-list">
+                            <h4>线上表字段</h4>
+                            <div id="onlineFields"></div>
+                        </div>
+                        
+                        <div class="field-list">
+                            <h4>测试表字段</h4>
+                            <div id="testFields"></div>
+                        </div>
+                    </div>
+
+                    <div class="mapping-list" id="mappingList">
+                        <div class="alert alert-warning">暂无字段映射，请选择字段进行映射</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 生成SQL -->
+            <div class="section">
+                <h3>⚡ 生成对比SQL</h3>
+                <div class="text-center">
+                    <button class="btn btn-primary" id="generateBtn" onclick="generateSQL()" disabled>
+                        🚀 生成对比SQL
+                    </button>
+                </div>
+            </div>
+
+            <!-- 结果显示 -->
+            <div class="result-container" id="resultContainer">
+                <div class="section">
+                    <h3>📋 生成的SQL语句</h3>
+                    <div class="text-center" style="margin-bottom: 20px;">
+                        <button class="btn btn-success" onclick="copySQL()">📋 复制SQL</button>
+                    </div>
+                    <div class="sql-result" id="resultSQL"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 自定义弹窗 -->
+    <div id="customModal" class="custom-modal">
+        <div class="modal-content">
+            <h3 id="modalTitle">提示</h3>
+            <p id="modalMessage"></p>
+            <div class="modal-buttons" id="modalButtons">
+                <button class="btn btn-primary" onclick="closeModal()">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        let currentMode = 'manual';
+        let onlineTableInfo = { tableName: '', fields: [] };
+        let testTableInfo = { tableName: '', fields: [] };
+        let fieldMappings = [];
+        let primaryKeys = [];
+        let selectedOnlineField = null;
+        let selectedTestField = null;
+
+        /**
+         * 页面加载完成后的初始化
+         */
+        document.addEventListener('DOMContentLoaded', function() {
+            updateProgressBar(25);
+            
+            // 检查是否在非HTTPS环境下使用代理模式
+            if (location.protocol !== 'https:' && document.getElementById('useProxy').value === 'true') {
+                console.warn('当前页面不是HTTPS，代理模式可能无法正常工作');
+            }
+        });
+
+        /**
+         * 切换模式
+         */
+        function switchMode(mode) {
+            currentMode = mode;
+            
+            // 更新按钮状态
+            document.getElementById('apiModeBtn').classList.toggle('active', mode === 'api');
+            document.getElementById('manualModeBtn').classList.toggle('active', mode === 'manual');
+            
+            // 显示/隐藏对应区域
+            document.getElementById('apiSection').style.display = mode === 'api' ? 'block' : 'none';
+            document.getElementById('manualSection').style.display = mode === 'manual' ? 'block' : 'none';
+            
+            // 重置状态
+            resetState();
+        }
+
+        /**
+         * 重置状态
+         */
+        function resetState() {
+            onlineTableInfo = { tableName: '', fields: [] };
+            testTableInfo = { tableName: '', fields: [] };
+            fieldMappings = [];
+            primaryKeys = [];
+            selectedOnlineField = null;
+            selectedTestField = null;
+            
+            document.getElementById('mappingContainer').style.display = 'none';
+            document.getElementById('resultContainer').style.display = 'none';
+            document.getElementById('generateBtn').disabled = true;
+            updateProgressBar(25);
+        }
+
+        /**
+         * 通过API获取表结构
+         */
+        async function fetchTableStructures() {
+            const apiUrl = document.getElementById('apiUrl').value.trim();
+            const onlineTableName = document.getElementById('onlineTableName').value.trim();
+            const testTableName = document.getElementById('testTableName').value.trim();
+            const useProxy = document.getElementById('useProxy').value === 'true';
+
+            if (!apiUrl || !onlineTableName || !testTableName) {
+                showAlert('请填写完整的API地址和表名信息!');
+                return;
+            }
+
+            // 检查代理模式下的Cookie警告
+            if (useProxy && location.protocol !== 'https:') {
+                showAlert('警告：当前页面不是HTTPS，代理模式可能无法正常工作。建议使用HTTPS访问或关闭代理模式。');
+            }
+
+            try {
+                // 获取线上表结构
+                const onlineResponse = await fetchWithProxy(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        tableName: onlineTableName
+                    })
+                }, useProxy);
+
+                if (!onlineResponse.ok) {
+                    throw new Error(`获取线上表结构失败: ${onlineResponse.status}`);
+                }
+
+                const onlineData = await onlineResponse.json();
+
+                // 获取测试表结构
+                const testResponse = await fetchWithProxy(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        tableName: testTableName
+                    })
+                }, useProxy);
+
+                if (!testResponse.ok) {
+                    throw new Error(`获取测试表结构失败: ${testResponse.status}`);
+                }
+
+                const testData = await testResponse.json();
+
+                // 处理返回的数据
+                onlineTableInfo = {
+                    tableName: onlineTableName,
+                    fields: onlineData.fields || []
+                };
+
+                testTableInfo = {
+                    tableName: testTableName,
+                    fields: testData.fields || []
+                };
+
+                if (onlineTableInfo.fields.length === 0 || testTableInfo.fields.length === 0) {
+                    showAlert('获取到的表结构为空，请检查表名是否正确!');
+                    return;
+                }
+
+                // 显示映射界面
+                document.getElementById('mappingContainer').style.display = 'block';
+                updateProgressBar(50);
+                
+                // 渲染字段列表
+                renderFieldList('onlineFields', onlineTableInfo.fields, 'online');
+                renderFieldList('testFields', testTableInfo.fields, 'test');
+
+                showAlert(`获取表结构成功!\n线上表: ${onlineTableInfo.tableName} (${onlineTableInfo.fields.length}个字段)\n测试表: ${testTableInfo.tableName} (${testTableInfo.fields.length}个字段)`);
+
+            } catch (error) {
+                showAlert('获取表结构时出错: ' + error.message);
+                console.error('API请求错误:', error);
+            }
+        }
+
+        /**
+         * 带代理的fetch请求
+         */
+        async function fetchWithProxy(url, options, useProxy) {
+            if (!useProxy) {
+                return fetch(url, options);
+            }
+
+            // 代理模式下的请求处理
+            const proxyUrl = 'https://cors-anywhere.herokuapp.com/' + url;
+            return fetch(proxyUrl, {
+                ...options,
+                headers: {
+                    ...options.headers,
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+        }
+
+        /**
+         * 显示自定义弹窗
+         */
+        function showAlert(message, title = '提示') {
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalMessage').textContent = message;
+            document.getElementById('modalButtons').innerHTML = 
+                '<button class="btn btn-primary" onclick="closeModal()">确定</button>';
+            document.getElementById('customModal').style.display = 'block';
+        }
+
+        /**
+         * 显示确认弹窗
+         */
+        function showConfirm(message, onConfirm, title = '确认') {
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalMessage').textContent = message;
+            document.getElementById('modalButtons').innerHTML = `
+                <button class="btn btn-secondary" onclick="closeModal()">取消</button>
+                <button class="btn btn-primary" onclick="confirmAction()">确定</button>
+            `;
+            
+            // 保存确认回调
+            window.currentConfirmCallback = onConfirm;
+            document.getElementById('customModal').style.display = 'block';
+        }
+
+        /**
+         * 确认操作
+         */
+        function confirmAction() {
+            if (window.currentConfirmCallback) {
+                window.currentConfirmCallback();
+                window.currentConfirmCallback = null;
+            }
+            closeModal();
+        }
+
+        /**
+         * 关闭弹窗
+         */
+        function closeModal() {
+            document.getElementById('customModal').style.display = 'none';
+        }
+
+        /**
+         * 加载示例数据
+         */
+        function loadExampleData() {
+            document.getElementById('onlineTableName').value = 'dim_pub_hr_empl_cho_cockpit_org_info_his_da';
+            document.getElementById('testTableName').value = 'dim_pub_hr_empl_cho_cockpit_org_test_info_his_da';
+            showAlert('示例数据已加载，请点击"获取表结构"按钮');
+        }
+
+        /**
+         * 加载示例DDL
+         */
+        function loadExampleDDL() {
+            document.getElementById('onlineTableDDL').value = getExampleOnlineDDL();
+            document.getElementById('testTableDDL').value = getExampleTestDDL();
+            showAlert('示例DDL已加载，请点击"解析表结构"按钮');
+        }
+
+        /**
+         * 获取示例线上表DDL
+         */
+        function getExampleOnlineDDL() {
+            return `CREATE EXTERNAL TABLE \`dim_pub_hr_empl_cho_cockpit_org_info_his_da\`(
+  \`empl_id\` string COMMENT '员工ID', 
+  \`empl_name\` string COMMENT '员工姓名', 
+  \`org_id\` string COMMENT '组织ID', 
+  \`org_name\` string COMMENT '组织名称', 
+  \`org_level\` string COMMENT '组织层级', 
+  \`org_type_code\` string COMMENT '组织类型编码', 
+  \`org_type_name\` string COMMENT '组织类型名称', 
+  \`org_range_code\` string COMMENT '组织范围编码', 
+  \`org_range_name\` string COMMENT '组织范围名称', 
+  \`plat_city_level1_category_code\` string COMMENT '总部城市一级分类编码', 
+  \`plat_city_level1_category_name\` string COMMENT '总部城市一级分类名称', 
+  \`plat_city_level2_category_code\` string COMMENT '总部城市二级分类编码', 
+  \`plat_city_level2_category_name\` string COMMENT '总部城市二级分类名称'
+)
+PARTITIONED BY ( 
+  \`pt\` string)
+ROW FORMAT DELIMITED 
+  FIELDS TERMINATED BY '\\u0001' 
+STORED AS INPUTFORMAT 
+  'org.apache.hadoop.hive.ql.io.orc.OrcInputFormat' 
+OUTPUTFORMAT 
+  'org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat'
+LOCATION
+  'hdfs://ns-fed/user/bigdata/dim/dim_pub_hr_empl_cho_cockpit_org_info_his_da'`;
+        }
+
+        /**
+         * 获取示例测试表DDL
+         */
+        function getExampleTestDDL() {
+            return `CREATE EXTERNAL TABLE \`dim_pub_hr_empl_cho_cockpit_org_test_info_his_da\`(
+  \`empl_id\` string COMMENT '员工ID', 
+  \`empl_name\` string COMMENT '员工姓名', 
+  \`org_id\` string COMMENT '组织ID', 
+  \`org_name\` string COMMENT '组织名称', 
+  \`org_level\` string COMMENT '组织层级', 
+  \`org_type_code\` string COMMENT '组织类型编码', 
+  \`org_type_name\` string COMMENT '组织类型名称', 
+  \`org_range_code\` string COMMENT '组织范围编码', 
+  \`org_range_name\` string COMMENT '组织范围名称', 
+  \`plat_city_level1_category_code\` string COMMENT '总部城市一级分类编码', 
+  \`plat_city_level1_category_name\` string COMMENT '总部城市一级分类名称', 
+  \`plat_city_level2_category_code\` string COMMENT '总部城市二级分类编码', 
+  \`plat_city_level2_category_name\` string COMMENT '总部城市二级分类名称'
+)
+PARTITIONED BY ( 
+  \`pt\` string)
+ROW FORMAT DELIMITED 
+  FIELDS TERMINATED BY '\\u0001' 
+STORED AS INPUTFORMAT 
+  'org.apache.hadoop.hive.ql.io.orc.OrcInputFormat' 
+OUTPUTFORMAT 
+  'org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat'
+LOCATION
+  'hdfs://ns-fed/user/bigdata/dim/dim_pub_hr_empl_cho_cockpit_org_test_info_his_da'`;
+        }
+
+        /**
+         * 解析建表语句，提取表名和字段信息
+         */
+        function parseTableStructure() {
+            const onlineDDL = document.getElementById('onlineTableDDL').value.trim();
+            const testDDL = document.getElementById('testTableDDL').value.trim();
+
+            if (!onlineDDL || !testDDL) {
+                showAlert('请输入完整的建表语句!');
+                return;
+            }
+
+            try {
+                onlineTableInfo = parseDDL(onlineDDL);
+                testTableInfo = parseDDL(testDDL);
+
+                if (onlineTableInfo.fields.length === 0 || testTableInfo.fields.length === 0) {
+                    showAlert('解析建表语句失败，请检查语句格式!');
+                    return;
+                }
+
+                // 显示映射界面
+                document.getElementById('mappingContainer').style.display = 'block';
+                updateProgressBar(50);
+                
+                // 渲染字段列表
+                renderFieldList('onlineFields', onlineTableInfo.fields, 'online');
+                renderFieldList('testFields', testTableInfo.fields, 'test');
+
+                showAlert(`解析成功!\n线上表: ${onlineTableInfo.tableName} (${onlineTableInfo.fields.length}个字段)\n测试表: ${testTableInfo.tableName} (${testTableInfo.fields.length}个字段)`);
+            } catch (error) {
+                showAlert('解析建表语句时出错: ' + error.message);
+            }
+        }
+
+        /**
+         * 解析DDL语句
+         */
+        function parseDDL(ddl) {
+            const tableNameMatch = ddl.match(/CREATE\s+(?:EXTERNAL\s+)?TABLE\s+`?([^`\s(]+)`?/i);
+            if (!tableNameMatch) {
+                throw new Error('无法解析表名');
+            }
+
+            const tableName = tableNameMatch[1];
+            const fields = [];
+
+            // 提取字段定义部分
+            const fieldSectionMatch = ddl.match(/\(([\s\S]*?)\)\s*(?:PARTITIONED|ROW|STORED|LOCATION|$)/i);
+            if (!fieldSectionMatch) {
+                throw new Error('无法解析字段定义');
+            }
+
+            const fieldSection = fieldSectionMatch[1];
+            
+            // 解析每个字段
+            const fieldLines = fieldSection.split(',').map(line => line.trim()).filter(line => line);
+            
+            for (let line of fieldLines) {
+                // 跳过分区字段等非数据字段
+                if (line.toLowerCase().includes('partitioned by')) break;
+                
+                const fieldMatch = line.match(/`?([^`\s]+)`?\s+(\w+)(?:\s+COMMENT\s+'([^']*)')?/i);
+                if (fieldMatch) {
+                    fields.push({
+                        name: fieldMatch[1],
+                        type: fieldMatch[2],
+                        comment: fieldMatch[3] || ''
+                    });
+                }
+            }
+
+            return { tableName, fields };
+        }
+
+        /**
+         * 渲染字段列表
+         */
+        function renderFieldList(containerId, fields, tableType) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+
+            fields.forEach((field, index) => {
+                const fieldDiv = document.createElement('div');
+                fieldDiv.className = 'field-item';
+                fieldDiv.dataset.fieldName = field.name;
+                fieldDiv.dataset.tableType = tableType;
+                fieldDiv.dataset.index = index;
+
+                fieldDiv.innerHTML = `
+                    <div class="field-name">${field.name}</div>
+                    <div class="field-comment">${field.type} - ${field.comment}</div>
+                `;
+
+                fieldDiv.onclick = () => selectField(fieldDiv, field, tableType);
+                container.appendChild(fieldDiv);
+            });
+            
+            // 延迟更新连线，确保DOM已渲染
+            setTimeout(() => {
+                updateMappingLines();
+            }, 100);
+        }
+
+        /**
+         * 选择字段进行映射
+         */
+        function selectField(element, field, tableType) {
+            // 清除之前的选择
+            document.querySelectorAll('.field-item.selected').forEach(item => {
+                if (item.dataset.tableType === tableType) {
+                    item.classList.remove('selected');
+                }
+            });
+
+            element.classList.add('selected');
+
+            if (tableType === 'online') {
+                selectedOnlineField = field;
+            } else {
+                selectedTestField = field;
+            }
+
+            // 如果两个字段都选中了，创建映射
+            if (selectedOnlineField && selectedTestField) {
+                createMapping(selectedOnlineField, selectedTestField);
+                clearSelection();
+            }
+        }
+
+        /**
+         * 创建字段映射
+         */
+        function createMapping(onlineField, testField) {
+            // 检查是否已存在映射
+            const existingMapping = fieldMappings.find(m => 
+                m.onlineField === onlineField.name || m.testField === testField.name
+            );
+
+            if (existingMapping) {
+                showConfirm('字段已存在映射关系，是否覆盖?', () => {
+                    // 移除旧映射
+                    fieldMappings = fieldMappings.filter(m => m !== existingMapping);
+                    
+                    fieldMappings.push({
+                        onlineField: onlineField.name,
+                        testField: testField.name,
+                        online: onlineField,
+                        test: testField,
+                        isPrimaryKey: false
+                    });
+
+                    updateMappingList();
+                });
+                return;
+            }
+
+            fieldMappings.push({
+                onlineField: onlineField.name,
+                testField: testField.name,
+                online: onlineField,
+                test: testField,
+                isPrimaryKey: false
+            });
+
+            updateMappingList();
+        }
+
+        /**
+         * 清除选择状态
+         */
+        function clearSelection() {
+            selectedOnlineField = null;
+            selectedTestField = null;
+            document.querySelectorAll('.field-item.selected').forEach(item => {
+                item.classList.remove('selected');
+            });
+        }
+
+        /**
+         * 自动映射同名字段
+         */
+        function autoMapping() {
+            // 检查是否已解析表结构
+            if (!onlineTableInfo.tableName || !testTableInfo.tableName) {
+                showAlert('请先输入建表语句并点击"解析表结构"!');
+                return;
+            }
+
+            fieldMappings = [];
+            
+            onlineTableInfo.fields.forEach(onlineField => {
+                const matchingTestField = testTableInfo.fields.find(testField => 
+                    testField.name === onlineField.name
+                );
+                
+                if (matchingTestField) {
+                    fieldMappings.push({
+                        onlineField: onlineField.name,
+                        testField: matchingTestField.name,
+                        online: onlineField,
+                        test: matchingTestField,
+                        isPrimaryKey: false
+                    });
+                }
+            });
+
+            updateMappingList();
+            
+            if (fieldMappings.length > 0) {
+                showAlert(`自动映射完成，共映射 ${fieldMappings.length} 个字段\n\n下一步：请设置主键字段，然后点击"确认映射"`);
+            } else {
+                showAlert('未找到同名字段，请手动进行字段映射\n\n操作方法：分别点击左右两侧的字段进行映射');
+            }
+        }
+
+        /**
+         * 清除所有映射
+         */
+        function clearMapping() {
+            showConfirm('确定要清除所有映射关系吗?', () => {
+                fieldMappings = [];
+                primaryKeys = [];
+                updateMappingList();
+                // 确保清除所有连线
+                updateMappingLines();
+            });
+        }
+
+        /**
+         * 更新映射列表显示
+         */
+        function updateMappingList() {
+            const container = document.getElementById('mappingList');
+            
+            if (fieldMappings.length === 0) {
+                container.innerHTML = '<div class="alert alert-warning">暂无字段映射，请选择字段进行映射</div>';
+                return;
+            }
+
+            const primaryKeyCount = fieldMappings.filter(m => m.isPrimaryKey).length;
+            let html = `<h4>字段映射关系: (${fieldMappings.length}个字段，${primaryKeyCount}个主键)</h4>`;
+            
+            fieldMappings.forEach((mapping, index) => {
+                html += `
+                    <div class="mapping-item ${mapping.isPrimaryKey ? 'primary' : ''}">
+                        <div>
+                            <strong>${mapping.online.name}</strong> (${mapping.online.comment}) 
+                            ↔ 
+                            <strong>${mapping.test.name}</strong> (${mapping.test.comment})
+                            ${mapping.isPrimaryKey ? ' <span style="color: #ff9800;">[主键]</span>' : ''}
+                        </div>
+                        <div>
+                            <button class="btn btn-secondary" style="padding: 5px 10px; font-size: 12px; margin-right: 5px;" 
+                                    onclick="togglePrimaryKey(${index})">
+                                ${mapping.isPrimaryKey ? '取消主键' : '设为主键'}
+                            </button>
+                            <button class="btn btn-danger" style="padding: 5px 10px; font-size: 12px;" 
+                                    onclick="removeMapping(${index})">
+                                删除
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+            
+            // 更新连线显示
+            updateMappingLines();
+        }
+
+        /**
+         * 更新映射连线
+         */
+        function updateMappingLines() {
+            const svg = document.getElementById('mappingLines');
+            if (!svg) {
+                return;
+            }
+            
+            // 清除现有连线
+            svg.innerHTML = '';
+            
+            fieldMappings.forEach((mapping, index) => {
+                const onlineElement = getFieldElement(mapping.onlineField, 'online');
+                const testElement = getFieldElement(mapping.testField, 'test');
+                
+                if (onlineElement && testElement) {
+                    const line = createMappingLine(onlineElement, testElement, mapping.isPrimaryKey);
+                    svg.appendChild(line);
+                }
+            });
+        }
+
+        /**
+         * 获取字段元素
+         */
+        function getFieldElement(fieldName, tableType) {
+            const containerId = tableType === 'online' ? 'onlineFields' : 'testFields';
+            const container = document.getElementById(containerId);
+            if (!container) return null;
+            
+            // 查找包含字段名的元素
+            const elements = container.querySelectorAll('.field-item');
+            for (let i = 0; i < elements.length; i++) {
+                const element = elements[i];
+                const fieldNameElement = element.querySelector('.field-name');
+                if (fieldNameElement && fieldNameElement.textContent === fieldName) {
+                    return element;
+                }
+            }
+            return null;
+        }
+
+        /**
+         * 创建映射连线
+         */
+        function createMappingLine(fromElement, toElement, isPrimaryKey) {
+            const mappingContainer = document.getElementById('fieldMappingContainer');
+            const containerRect = mappingContainer.getBoundingClientRect();
+            
+            const fromRect = fromElement.getBoundingClientRect();
+            const toRect = toElement.getBoundingClientRect();
+            
+            // 计算相对于容器的坐标
+            const fromX = fromRect.right - containerRect.left;
+            const fromY = fromRect.top + fromRect.height / 2 - containerRect.top;
+            const toX = toRect.left - containerRect.left;
+            const toY = toRect.top + toRect.height / 2 - containerRect.top;
+            
+            // 创建SVG路径
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            const midX = (fromX + toX) / 2;
+            const pathData = `M ${fromX} ${fromY} C ${midX} ${fromY}, ${midX} ${toY}, ${toX} ${toY}`;
+            
+            path.setAttribute('d', pathData);
+            path.setAttribute('class', isPrimaryKey ? 'mapping-line mapping-line-primary' : 'mapping-line');
+            
+            return path;
+        }
+
+        /**
+         * 切换主键状态
+         */
+        function togglePrimaryKey(index) {
+            fieldMappings[index].isPrimaryKey = !fieldMappings[index].isPrimaryKey;
+            updateMappingList();
+        }
+
+        /**
+         * 移除映射
+         */
+        function removeMapping(index) {
+            showConfirm('确定要删除这个映射关系吗?', () => {
+                fieldMappings.splice(index, 1);
+                updateMappingList();
+                updateMappingLines();
+            });
+        }
+
+        /**
+         * 确认映射配置
+         */
+        function confirmMapping() {
+            if (fieldMappings.length === 0) {
+                showAlert('请至少配置一个字段映射!\n\n请先点击"自动映射同名字段"或手动选择字段进行映射');
+                return;
+            }
+
+            const primaryKeyMappings = fieldMappings.filter(m => m.isPrimaryKey);
+            if (primaryKeyMappings.length === 0) {
+                showAlert('请至少设置一个主键字段!\n\n在字段映射列表中，点击字段旁边的"设为主键"按钮');
+                return;
+            }
+
+            updateProgressBar(75);
+            document.getElementById('generateBtn').disabled = false;
+            showAlert(`映射配置完成!\n共 ${fieldMappings.length} 个字段映射\n其中 ${primaryKeyMappings.length} 个主键字段\n\n现在可以点击"生成对比SQL"按钮了！`);
+        }
+
+        /**
+         * 生成对比SQL
+         */
+        function generateSQL() {
+            // 检查是否已解析表结构
+            if (!onlineTableInfo.tableName || !testTableInfo.tableName) {
+                showAlert('请先输入建表语句并点击"解析表结构"!');
+                return;
+            }
+
+            if (fieldMappings.length === 0) {
+                showAlert('请先配置字段映射!\n\n操作步骤:\n1. 点击"自动映射同名字段"或手动选择字段进行映射\n2. 设置至少一个主键字段\n3. 点击"确认映射"');
+                return;
+            }
+
+            const primaryKeyMappings = fieldMappings.filter(m => m.isPrimaryKey);
+            if (primaryKeyMappings.length === 0) {
+                showAlert('请至少设置一个主键字段!\n\n在字段映射列表中，点击字段旁边的"设为主键"按钮');
+                return;
+            }
+
+            try {
+                const sql = buildCompareSQL();
+                document.getElementById('resultSQL').textContent = sql;
+                document.getElementById('resultContainer').style.display = 'block';
+                updateProgressBar(100);
+                
+                // 启用按钮（如果之前被禁用）
+                document.getElementById('generateBtn').disabled = false;
+                
+                // 滚动到结果区域
+                document.getElementById('resultContainer').scrollIntoView({ behavior: 'smooth' });
+                
+                showAlert('SQL生成成功！请查看下方结果。');
+            } catch (error) {
+                showAlert('生成SQL时出错: ' + error.message);
+                console.error('SQL生成错误:', error);
+            }
+        }
+
+        /**
+         * 构建对比SQL语句
+         */
+        function buildCompareSQL() {
+            const primaryKeyMappings = fieldMappings.filter(m => m.isPrimaryKey);
+            const dataFieldMappings = fieldMappings.filter(m => !m.isPrimaryKey);
+            
+            // 构建SELECT子句
+            let selectClause = `select
+     CASE
+        WHEN t1.${primaryKeyMappings[0].onlineField} IS NULL THEN '${testTableInfo.tableName}缺失'
+        WHEN t2.${primaryKeyMappings[0].testField} IS NULL THEN '${onlineTableInfo.tableName}缺失'
+        ELSE '字段不一致'
+    END as diff_type`;
+
+            // 添加主键字段 - 如果t1中字段为null则使用t2中的值
+            primaryKeyMappings.forEach(mapping => {
+                selectClause += `\n    ,coalesce(t1.${mapping.onlineField}, t2.${mapping.testField}) as ${mapping.onlineField}`;
+            });
+
+            // 添加数据字段对比
+            dataFieldMappings.forEach(mapping => {
+                selectClause += `\n    ,if(nvl(t1.${mapping.onlineField},'')<>nvl(t2.${mapping.testField},''), CONCAT_WS(',' , nvl(t1.${mapping.onlineField},'null'), nvl(t2.${mapping.testField},'null')),t1.${mapping.onlineField}) as ${mapping.onlineField}`;
+            });
+
+            // 构建FROM子句 - 线上表
+            let fromClause = `\nfrom\n(\n    select`;
+            fieldMappings.forEach((mapping, index) => {
+                fromClause += `${index === 0 ? '\n' : '\n        ,'}cast(${mapping.onlineField} as string) as ${mapping.onlineField}`;
+            });
+            fromClause += `\n    from ${onlineTableInfo.tableName}\n    where pt='\${-1d_pt}'\n) t1`;
+
+            // 构建JOIN子句 - 测试表
+            fromClause += `\nfull outer join\n(\n    select`;
+            fieldMappings.forEach((mapping, index) => {
+                fromClause += `${index === 0 ? '\n' : '\n        ,'}cast(${mapping.testField} as string) as ${mapping.testField}`;
+            });
+            fromClause += `\n    from ${testTableInfo.tableName}\n    where pt='\${-1d_pt}'\n) t2`;
+
+            // 构建ON子句
+            let onClause = '\non ';
+            primaryKeyMappings.forEach((mapping, index) => {
+                onClause += `${index === 0 ? '' : ' and '}t1.${mapping.onlineField}=t2.${mapping.testField}`;
+            });
+
+            // 构建WHERE子句
+            let whereClause = '\nwhere ';
+            primaryKeyMappings.forEach((mapping, index) => {
+                whereClause += `${index === 0 ? '' : ' or '}t1.${mapping.onlineField} is null or t2.${mapping.testField} is null`;
+            });
+            
+            dataFieldMappings.forEach(mapping => {
+                whereClause += `\nor nvl(t1.${mapping.onlineField},'')<>nvl(t2.${mapping.testField},'')`;
+            });
+
+            return selectClause + fromClause + onClause + whereClause;
+        }
+
+        /**
+         * 复制SQL到剪贴板
+         */
+        function copySQL() {
+            const sqlText = document.getElementById('resultSQL').textContent;
+            navigator.clipboard.writeText(sqlText).then(() => {
+                showAlert('SQL已复制到剪贴板!');
+            }).catch(err => {
+                console.error('复制失败:', err);
+                // 降级方案
+                const textArea = document.createElement('textarea');
+                textArea.value = sqlText;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showAlert('SQL已复制到剪贴板!');
+            });
+        }
+
+        /**
+         * 更新进度条
+         */
+        function updateProgressBar(percentage) {
+            document.getElementById('progressBar').style.width = percentage + '%';
+        }
+    </script>
+</body>
+</html>
