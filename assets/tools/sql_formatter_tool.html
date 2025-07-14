@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL 格式化工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #F8FAFC;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            border: 1px solid #E2E8F0;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4F46E5 0%, #6366F1 100%);
+            color: white;
+            padding: 32px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .step {
+            margin-bottom: 40px;
+        }
+
+        .step-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1F2937;
+            margin-bottom: 24px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #4F46E5;
+            position: relative;
+        }
+
+        .step-title::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 60px;
+            height: 2px;
+            background: linear-gradient(90deg, #4F46E5, #6366F1);
+        }
+
+        .input-group {
+            margin-bottom: 32px;
+            display: flex;
+            gap: 24px;
+            position: relative;
+        }
+
+        .input-label {
+            display: block;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 10px;
+            font-size: 15px;
+        }
+
+        .sql-textarea {
+            width: 100%;
+            height: 200px;
+            padding: 16px;
+            border: 2px solid #E5E7EB;
+            border-radius: 12px;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: 14px;
+            resize: vertical;
+            transition: all 0.2s ease;
+            background: #FAFBFC;
+        }
+
+        .sql-textarea:focus {
+            outline: none;
+            border-color: #4F46E5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+            background: white;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #4F46E5 0%, #6366F1 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 15px;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-right: 12px;
+            margin-bottom: 8px;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(79, 70, 229, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+        }
+
+        .btn-danger:hover {
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-sm {
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+
+        .result-container {
+            margin-top: 30px;
+        }
+
+        .result-sql {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 25px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            width: 100%;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .button-group {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .join-group {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f7f9fc;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .join-group label {
+            font-weight: 600;
+            color: #444;
+        }
+
+        .join-group input, .join-group select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .input-container {
+            flex: 4;
+        }
+
+        .field-panel {
+            flex: 5;
+            background-color: #F8FAFC;
+            border-radius: 12px;
+            padding: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #E5E7EB;
+        }
+
+        .field-panel h3 {
+            font-size: 16px;
+            margin-bottom: 12px;
+            color: #1F2937;
+            font-weight: 600;
+        }
+
+        .field-list {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+
+        .field-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background-color: white;
+            border-radius: 8px;
+            border: 1px solid #E5E7EB;
+            transition: all 0.2s ease;
+        }
+
+        .field-item:hover {
+            border-color: #4F46E5;
+            box-shadow: 0 2px 8px rgba(79, 70, 229, 0.1);
+        }
+
+        .field-item input[type="checkbox"] {
+            margin-right: 10px;
+        }
+
+        .field-name {
+            font-family: 'Courier New', monospace;
+            margin-right: 15px;
+            min-width: 100px;
+        }
+
+        .field-comment {
+            color: #666;
+            font-size: 14px;
+            flex-grow: 1;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .select-all {
+            font-size: 13px;
+            color: #4F46E5;
+            cursor: pointer;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+
+        .select-all:hover {
+            color: #6366F1;
+        }
+
+        .delete-button {
+            flex: 1;
+            align-self: flex-start;
+            margin-top: 0;
+        }
+
+        /* 新增: Toast 通知样式 */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #333;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: opacity 0.3s, transform 0.3s;
+            z-index: 100;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>SQL 格式化工具</h1>
+            <p>根据建表语句生成查询 SQL</p>
+        </div>
+
+        <div class="content">
+            <!-- 输入建表语句 -->
+            <div class="step" id="inputSteps">
+                <div class="step-title">输入建表语句</div>
+                <div id="inputGroups">
+                    <div class="input-group" id="inputGroup_0">
+                        <div class="input-container">
+                            <textarea id="createTableDDL_0" class="sql-textarea" placeholder="请输入 CREATE TABLE 语句..." oninput="parseFields(0)"></textarea>
+                        </div>
+                        <div class="field-panel" id="fieldPanel_0">
+                            <div class="panel-header">
+                                <h3>字段选择</h3>
+                                <span class="select-all" onclick="toggleSelectAll(0)">取消全选</span>
+                                <span class="select-all" onclick="toggleJoinKeys(0)">全选关联键</span>
+                            </div>
+                            <div class="field-list" id="fieldList_0">
+                                <div class="field-item">
+                                    <input type="checkbox" id="field_0_0" checked>
+                                    <span class="field-name">id</span>
+                                    <span class="field-comment">主键ID</span>
+                                    <input type="checkbox" class="join-key-checkbox" id="joinKey_0_0">
+                                    <label for="joinKey_0_0">关联键</label>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn btn-sm btn-danger delete-button" onclick="removeInput(0)">删除</button>
+                    </div>
+                    <div class="button-group" id="buttonGroup">
+                        <button class="btn" onclick="addInput()">新增输入表</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 连接设置 -->
+            <div class="step" id="joinSettings">
+                <div class="step-title">连接设置</div>
+            </div>
+
+            <!-- SQL 代码输出 -->
+            <div class="step result-container">
+                <div class="step-title">SQL 代码</div>
+                <div class="button-group">
+                    <button class="btn" onclick="formatSQL()">生成 SQL</button>
+                    <button class="btn" onclick="copySQL()">复制 SQL</button>
+                </div>
+                <div class="result-sql" id="resultSQL"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新增: Toast 通知元素 -->
+    <!-- 新增: 复制弹窗元素 -->
+    <div id="copyModal" class="modal">复制成功!</div>
+    <div id="modalOverlay" class="modal-overlay"></div>
+
+    <script>
+        let inputCount = 1;
+        const selectAllState = new Map(); // 用于存储每个表的全选状态
+        const selectAllJoinKeysState = new Map(); // 用于存储每个表的关联键全选状态
+
+        function addInput() {
+            const inputGroups = document.getElementById('inputGroups');
+            const newInputGroup = document.createElement('div');
+            newInputGroup.className = 'input-group';
+            newInputGroup.id = `inputGroup_${inputCount}`;
+            newInputGroup.innerHTML = `
+                <div class="input-container">
+                    <textarea id="createTableDDL_${inputCount}" class="sql-textarea" placeholder="请输入 CREATE TABLE 语句..." oninput="parseFields(${inputCount})"></textarea>
+                </div>
+                <div class="field-panel" id="fieldPanel_${inputCount}">
+                    <div class="panel-header">
+                        <h3>字段选择</h3>
+                        <span class="select-all" onclick="toggleSelectAll(${inputCount})">取消全选</span>
+                        <span class="select-all" onclick="toggleJoinKeys(${inputCount})">全选关联键</span>
+                    </div>
+                    <div class="field-list" id="fieldList_${inputCount}">
+                        <div class="field-item">
+                            <input type="checkbox" id="field_${inputCount}_0" checked>
+                            <span class="field-name">id</span>
+                            <span class="field-comment">主键ID</span>
+                            <input type="checkbox" class="join-key-checkbox" id="joinKey_${inputCount}_0">
+                            <label for="joinKey_${inputCount}_0">关联键</label>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn btn-sm btn-danger delete-button" onclick="removeInput(${inputCount})">删除</button>
+            `;
+            // 将新输入框添加到按钮组之前
+            inputGroups.insertBefore(newInputGroup, document.getElementById('buttonGroup'));
+            // 初始化状态为 false，表示当前未全选
+            selectAllState.set(inputCount, false);
+            selectAllJoinKeysState.set(inputCount, false);
+            inputCount++;
+            updateJoinSettings();
+        }
+
+        function removeInput(index) {
+            const inputGroup = document.getElementById(`inputGroup_${index}`);
+            if (inputGroup) {
+                inputGroup.remove();
+            }
+            
+            // 更新输入表计数
+            inputCount--;
+            
+            // 更新剩余输入表的索引和标题
+            const inputGroups = document.querySelectorAll('.input-group');
+            inputGroups.forEach((group, i) => {
+                group.id = `inputGroup_${i}`;
+                
+
+                
+                const textarea = group.querySelector('.sql-textarea');
+                if (textarea) {
+                    textarea.id = `createTableDDL_${i}`;
+                    textarea.oninput = () => parseFields(i);
+                }
+                
+                const fieldPanel = group.querySelector('.field-panel');
+                if (fieldPanel) {
+                    fieldPanel.id = `fieldPanel_${i}`;
+                    
+                    const selectAllBtn = fieldPanel.querySelector('.select-all:first-of-type');
+                    if (selectAllBtn) {
+                        selectAllBtn.onclick = () => toggleSelectAll(i);
+                    }
+                    
+                    const selectAllJoinKeysBtn = fieldPanel.querySelector('.select-all:last-of-type');
+                    if (selectAllJoinKeysBtn) {
+                        selectAllJoinKeysBtn.onclick = () => toggleJoinKeys(i);
+                    }
+                    
+                    const fieldList = fieldPanel.querySelector('.field-list');
+                    if (fieldList) {
+                        fieldList.id = `fieldList_${i}`;
+                    }
+                }
+                
+                const deleteBtn = group.querySelector('.delete-button');
+                if (deleteBtn) {
+                    deleteBtn.onclick = () => removeInput(i);
+                }
+            });
+            
+            // 更新连接设置
+            updateJoinSettings();
+        }
+
+        function updateJoinSettings() {
+            const joinSettings = document.getElementById('joinSettings');
+            joinSettings.innerHTML = '<div class="step-title">连接设置</div>';
+            
+            // 主表设置
+            const mainTableSettings = document.createElement('div');
+            mainTableSettings.className = 'join-group';
+            mainTableSettings.innerHTML = `
+                <label>主表设置:</label>
+                <label>表别名:</label>
+                <input type="text" id="mainAlias" placeholder="别名" value="t1" readonly>
+                <span class="text-gray-500">（默认使用第一个输入表作为主表）</span>
+            `;
+            joinSettings.appendChild(mainTableSettings);
+            
+            // 子表连接设置
+            for (let i = 1; i < inputCount; i++) {
+                const joinGroup = document.createElement('div');
+                joinGroup.className = 'join-group';
+                joinGroup.innerHTML = `
+                    <label>配置表${i + 1}的连接:</label>
+                    <label>表别名:</label>
+                    <input type="text" id="alias_${i}" placeholder="别名" value="t${i + 1}">
+                    <label>与表:</label>
+                    <select id="joinWith_${i}">
+                        ${generateJoinWithOptions(i)}
+                    </select>
+                    <label>连接方式:</label>
+                    <select id="joinType_${i}">
+                        <option value="LEFT JOIN">LEFT JOIN</option>
+                        <option value="INNER JOIN">INNER JOIN</option>
+                        <option value="RIGHT JOIN">RIGHT JOIN</option>
+                        <option value="FULL OUTER JOIN">FULL OUTER JOIN</option>
+                    </select>
+                    <div class="w-full"></div>
+                    <label>关联键设置:</label>
+                    <div id="joinKeySettings_${i}" class="w-full">
+                        <div class="join-key-pair" id="joinKeyPair_${i}_0">
+                            <select id="mainKey_${i}_0" class="main-key-select">
+                                <option value="id">id</option>
+                            </select>
+                            <label>=</label>
+                            <select id="joinKey_${i}_0" class="join-key-select">
+                                <option value="id">id</option>
+                            </select>
+                            <button class="btn btn-sm" onclick="addJoinKeyPair(${i})">+</button>
+                        </div>
+                    </div>
+                `;
+                joinSettings.appendChild(joinGroup);
+            }
+            
+            // 更新关联键选择框
+            setTimeout(() => {
+                for (let i = 0; i < inputCount; i++) {
+                    updateJoinKeySelectors(i);
+                }
+            }, 100);
+        }
+
+        function generateJoinWithOptions(currentIndex) {
+            let options = '';
+            for (let i = 0; i < currentIndex; i++) {
+                options += `<option value="${i}">表${i + 1} (${document.getElementById(`alias_${i}`)?.value || `t${i + 1}`})</option>`;
+            }
+            return options;
+        }
+
+        function addJoinKeyPair(tableIndex) {
+            const container = document.getElementById(`joinKeySettings_${tableIndex}`);
+            const pairCount = container.querySelectorAll('.join-key-pair').length;
+            
+            const newPair = document.createElement('div');
+            newPair.className = 'join-key-pair';
+            newPair.id = `joinKeyPair_${tableIndex}_${pairCount}`;
+            newPair.innerHTML = `
+                <select id="mainKey_${tableIndex}_${pairCount}" class="main-key-select">
+                    <option value="id">id</option>
+                </select>
+                <label>=</label>
+                <select id="joinKey_${tableIndex}_${pairCount}" class="join-key-select">
+                    <option value="id">id</option>
+                </select>
+                <button class="btn btn-sm" onclick="removeJoinKeyPair(${tableIndex}, ${pairCount})">-</button>
+            `;
+            
+            container.appendChild(newPair);
+            updateJoinKeySelectors(tableIndex);
+        }
+
+        function removeJoinKeyPair(tableIndex, pairIndex) {
+            const pair = document.getElementById(`joinKeyPair_${tableIndex}_${pairIndex}`);
+            if (pair) {
+                pair.remove();
+            }
+        }
+
+        function parseFields(index) {
+            const createTableDDL = document.getElementById(`createTableDDL_${index}`).value;
+            const fieldList = document.getElementById(`fieldList_${index}`);
+            const fields = [];
+            const comments = {};
+
+            // 提取字段和注释 - 改进的正则表达式，可以处理带括号的类型如decimal(18,4)
+            const fieldPattern = /`(\w+)`\s+([\w\(\),]+)\s+COMMENT\s+'([^']+)'/g;
+            let match;
+            while ((match = fieldPattern.exec(createTableDDL)) !== null) {
+                const fieldName = match[1];
+                const comment = match[3];
+                fields.push(fieldName);
+                comments[fieldName] = comment;
+            }
+
+            // 如果没有找到字段，使用默认字段
+            if (fields.length === 0) {
+                fieldList.innerHTML = `
+                    <div class="field-item">
+                        <input type="checkbox" id="field_${index}_0" checked>
+                        <span class="field-name">id</span>
+                        <span class="field-comment">主键ID</span>
+                        <input type="checkbox" class="join-key-checkbox" id="joinKey_${index}_0">
+                        <label for="joinKey_${index}_0">关联键</label>
+                    </div>
+                `;
+                return;
+            }
+
+            // 生成字段列表
+            let html = '';
+            fields.forEach((field, i) => {
+                html += `
+                    <div class="field-item">
+                        <input type="checkbox" id="field_${index}_${i}" checked onchange="updateJoinKeySelectors(${index})">
+                        <span class="field-name">${field}</span>
+                        <span class="field-comment">${comments[field]}</span>
+                        <input type="checkbox" class="join-key-checkbox" id="joinKey_${index}_${i}" onchange="autoAddJoinRelation(${index}, '${field}')">
+                        <label for="joinKey_${index}_${i}">关联键</label>
+                    </div>
+                `;
+            });
+            fieldList.innerHTML = html;
+        }
+
+        function autoAddJoinRelation(index, fieldName) {
+            const joinKeyCheckbox = document.getElementById(`joinKey_${index}_${getFieldIndex(index, fieldName)}`);
+            if (joinKeyCheckbox.checked) {
+                for (let i = 0; i < inputCount; i++) {
+                    if (i !== index) {
+                        const fields = getFields(i);
+                        if (fields.includes(fieldName)) {
+                            const otherJoinKeyCheckbox = document.getElementById(`joinKey_${i}_${getFieldIndex(i, fieldName)}`);
+                            if (otherJoinKeyCheckbox.checked) {
+                                const targetIndex = index > i ? index : i;
+                                const joinKeySettings = document.getElementById(`joinKeySettings_${targetIndex}`);
+                                const joinKeyPairs = joinKeySettings.querySelectorAll('.join-key-pair');
+                                
+                                // 检查是否已存在相同的关联关系
+                                let relationExists = false;
+                                joinKeyPairs.forEach(pair => {
+                                    const mainKeySelect = pair.querySelector('.main-key-select');
+                                    const joinKeySelect = pair.querySelector('.join-key-select');
+                                    if ((mainKeySelect.value === fieldName && joinKeySelect.value === fieldName)) {
+                                        relationExists = true;
+                                    }
+                                });
+                                
+                                if (!relationExists) {
+                                    const pairCount = joinKeyPairs.length;
+                                    addJoinKeyPair(targetIndex);
+                                    const mainKeySelect = document.getElementById(`mainKey_${targetIndex}_${pairCount}`);
+                                    const joinKeySelect = document.getElementById(`joinKey_${targetIndex}_${pairCount}`);
+                                    if (index > i) {
+                                        mainKeySelect.value = fieldName;
+                                        joinKeySelect.value = fieldName;
+                                    } else {
+                                        joinKeySelect.value = fieldName;
+                                        mainKeySelect.value = fieldName;
+                                    }
+                                    updateJoinKeySelectors(index);
+                                    updateJoinKeySelectors(i);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        function getFieldIndex(index, fieldName) {
+            const fields = getFields(index);
+            return fields.indexOf(fieldName);
+        }
+
+        function getFields(index) {
+            const fieldList = document.getElementById(`fieldList_${index}`);
+            const fieldItems = fieldList.querySelectorAll('.field-item');
+            const fields = [];
+            fieldItems.forEach(item => {
+                fields.push(item.querySelector('.field-name').textContent);
+            });
+            return fields;
+        }
+
+        function toggleSelectAll(index) {
+            const fieldList = document.getElementById(`fieldList_${index}`);
+            const checkboxes = fieldList.querySelectorAll('input[type="checkbox"]');
+            const currentState = selectAllState.get(index) || false;
+            const newState = !currentState;
+            
+            checkboxes.forEach((checkbox, i) => {
+                // 只切换字段选择框，不影响关联键选择框
+                if (i % 2 === 0) {
+                    checkbox.checked = newState;
+                }
+            });
+            
+            selectAllState.set(index, newState);
+            const selectAllButton = document.querySelector(`#fieldPanel_${index} .select-all:first-of-type`);
+            selectAllButton.textContent = newState ? '取消全选' : '全选';
+            
+            updateJoinKeySelectors(index);
+        }
+
+        function toggleJoinKeys(index) {
+            const fieldList = document.getElementById(`fieldList_${index}`);
+            const joinKeyCheckboxes = fieldList.querySelectorAll('.join-key-checkbox');
+            const currentState = selectAllJoinKeysState.get(index) || false;
+            const newState = !currentState;
+            
+            joinKeyCheckboxes.forEach(checkbox => {
+                checkbox.checked = newState;
+            });
+            
+            selectAllJoinKeysState.set(index, newState);
+            const selectAllJoinKeysButton = document.querySelector(`#fieldPanel_${index} .select-all:last-of-type`);
+            selectAllJoinKeysButton.textContent = newState ? '取消全选关联键' : '全选关联键';
+            
+            updateJoinKeySelectors(index);
+        }
+
+        function formatSQL() {
+            const subQueries = [];
+            const tableAliases = [];
+
+            // 处理每个输入表
+            for (let i = 0; i < inputCount; i++) {
+                const createTableDDL = document.getElementById(`createTableDDL_${i}`).value;
+                const fields = [];
+                const comments = {};
+                let tableName = '';
+
+                // 提取表名
+                const tableNameMatch = createTableDDL.match(/CREATE\s+(?:EXTERNAL\s+)?TABLE\s+(?:IF NOT EXISTS\s+)?`?([^`(\s]+)`?/i);
+                if (tableNameMatch) {
+                    tableName = tableNameMatch[1];
+                }
+
+                // 提取字段和注释 - 使用改进的正则表达式
+                const fieldPattern = /`(\w+)`\s+([\w\(\),]+)\s+COMMENT\s+'([^']+)'/g;
+                let match;
+                while ((match = fieldPattern.exec(createTableDDL)) !== null) {
+                    const fieldName = match[1];
+                    const comment = match[3];
+                    fields.push(fieldName);
+                    comments[fieldName] = comment;
+                }
+
+                // 获取选中的字段
+                const selectedFields = [];
+                const fieldList = document.getElementById(`fieldList_${i}`);
+                const checkboxes = fieldList.querySelectorAll('input[type="checkbox"]');
+                checkboxes.forEach((checkbox, idx) => {
+                    if (checkbox.checked && idx % 2 === 0) { // 只处理字段选择框
+                        const fieldIndex = Math.floor(idx / 2);
+                        const fieldName = fields[fieldIndex] || `field_${fieldIndex}`;
+                        const comment = comments[fieldName] || '';
+                        selectedFields.push({name: fieldName, comment});
+                    }
+                });
+
+                // 获取表别名
+                const alias = i === 0 ? 't1' : document.getElementById(`alias_${i}`).value || `t${i + 1}`;
+                tableAliases.push(alias);
+
+                // 生成 SELECT 语句
+                let selectClause = 'select\n';
+                selectedFields.forEach((field, index) => {
+                    const padding = '      ' + ' '.repeat(Math.max(0, 16 - field.name.length));
+                    selectClause += `${index > 0 ? '     ,' : '      '}${field.name}${padding}-- ${field.comment}\n`;
+                });
+
+                const subQuery = `${selectClause}from ${tableName}\nwhere pt = '${'${-1d_pt}'}'`;
+                subQueries.push({sql: subQuery, tableName, alias});
+            }
+
+            // 生成最终 SQL
+            let finalSQL = `select\n`;
+            // 生成最终 SELECT 子句
+            subQueries.forEach((subQuery, index) => {
+                const selectedFields = [];
+                const createTableDDL = document.getElementById(`createTableDDL_${index}`).value;
+                const fields = [];
+                const comments = {};
+                const fieldPattern = /`(\w+)`\s+([\w\(\),]+)\s+COMMENT\s+'([^']+)'/g;
+                let match;
+                while ((match = fieldPattern.exec(createTableDDL)) !== null) {
+                    const fieldName = match[1];
+                    const comment = match[3];
+                    fields.push(fieldName);
+                    comments[fieldName] = comment;
+                }
+                const fieldList = document.getElementById(`fieldList_${index}`);
+                const checkboxes = fieldList.querySelectorAll('input[type="checkbox"]');
+                checkboxes.forEach((checkbox, idx) => {
+                    if (checkbox.checked && idx % 2 === 0) { // 只处理字段选择框
+                        const fieldIndex = Math.floor(idx / 2);
+                        const fieldName = fields[fieldIndex] || `field_${fieldIndex}`;
+                        const comment = comments[fieldName] || '';
+                        selectedFields.push({name: fieldName, comment});
+                    }
+                });
+                selectedFields.forEach((field, innerIndex) => {
+                    const padding = '      ' + ' '.repeat(Math.max(0, 16 - field.name.length));
+                    finalSQL += `${innerIndex > 0 || index > 0 ? '     ,' : '      '}${subQuery.alias}.${field.name}${padding}-- ${field.comment}\n`;
+                });
+            });
+            finalSQL += `from\n(\n    ${subQueries[0].sql}\n) AS ${tableAliases[0]}`;
+
+            // 处理连接设置
+            for (let i = 1; i < inputCount; i++) {
+                const alias = tableAliases[i];
+                const joinType = document.getElementById(`joinType_${i}`).value;
+                const joinWithIndex = parseInt(document.getElementById(`joinWith_${i}`).value);
+                const joinWithAlias = tableAliases[joinWithIndex];
+
+                // 获取所有关联键对
+                const joinKeyPairs = document.querySelectorAll(`#joinKeySettings_${i} .join-key-pair`);
+                let onClause = '';
+
+                joinKeyPairs.forEach((pair, index) => {
+                    const mainKey = pair.querySelector('.main-key-select').value;
+                    const joinKey = pair.querySelector('.join-key-select').value;
+
+                    if (index > 0) {
+                        onClause += '\n AND ';
+                    }
+                    onClause += `${joinWithAlias}.${mainKey} = ${alias}.${joinKey}`;
+                });
+
+                finalSQL += `
+${joinType}
+ (
+${subQueries[i].sql}
+ ) AS ${alias} \nON ${onClause}`;
+            }
+
+            document.getElementById('resultSQL').textContent = finalSQL;
+        }
+
+        function copySQL() {
+            const resultSQL = document.getElementById('resultSQL');
+            const text = resultSQL.textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                showModal();
+            });
+        }
+
+        function showModal() {
+            const modal = document.getElementById('copyModal');
+            const overlay = document.getElementById('modalOverlay');
+            modal.style.display = 'block';
+            overlay.style.display = 'block';
+            setTimeout(() => {
+                closeModal();
+            }, 2000);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('copyModal');
+            const overlay = document.getElementById('modalOverlay');
+            modal.style.display = 'none';
+            overlay.style.display = 'none';
+        }
+
+        // 修改: 新增自动推荐关联键功能
+        function updateJoinKeySelectors(tableIndex) {
+            const joinKeyPairs = document.querySelectorAll(`#joinKeySettings_${tableIndex} .join-key-pair`);
+            joinKeyPairs.forEach((pair, pairIndex) => {
+                const mainKeySelect = pair.querySelector('.main-key-select');
+                const joinKeySelect = pair.querySelector('.join-key-select');
+                const joinWithIndex = document.getElementById(`joinWith_${tableIndex}`).value;
+
+                // 清空选项
+                mainKeySelect.innerHTML = '';
+                joinKeySelect.innerHTML = '';
+
+                // 获取主表和关联表的关联键
+                const mainJoinKeys = getSelectedJoinKeys(joinWithIndex);
+                const joinKeys = getSelectedJoinKeys(tableIndex);
+
+                // 添加选项
+                mainJoinKeys.forEach(key => {
+                    const option = document.createElement('option');
+                    option.value = key;
+                    option.textContent = key;
+                    mainKeySelect.appendChild(option);
+                });
+
+                joinKeys.forEach(key => {
+                    const option = document.createElement('option');
+                    option.value = key;
+                    option.textContent = key;
+                    joinKeySelect.appendChild(option);
+                });
+
+                // 自动推荐相同名称的关联键
+                if (mainJoinKeys.includes(joinKeys[0])) {
+                    mainKeySelect.value = joinKeys[0];
+                    joinKeySelect.value = joinKeys[0];
+                }
+            });
+        }
+
+        function getSelectedJoinKeys(tableIndex) {
+            const joinKeys = [];
+            const fieldItems = document.querySelectorAll(`#fieldList_${tableIndex} .field-item`);
+            fieldItems.forEach((item, index) => {
+                const joinKeyCheckbox = item.querySelector('.join-key-checkbox');
+                if (joinKeyCheckbox.checked) {
+                    const fieldName = item.querySelector('.field-name').textContent;
+                    joinKeys.push(fieldName);
+                }
+            });
+            return joinKeys;
+        }
+    </script>
+</body>
+
+<style>
+    /* 新增: 弹窗样式 */
+    .modal {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: rgba(0, 0, 0, 0.7);
+        color: white;
+        text-align: center;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        z-index: 1000;
+        max-width: 500px;
+        width: 90%;
+    }
+
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+    }
+</style>
+</body>
+</html>

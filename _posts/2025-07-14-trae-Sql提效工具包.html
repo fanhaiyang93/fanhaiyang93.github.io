@@ -1,3 +1,12 @@
+---
+layout: post
+title: "SQL提效工具包"
+date: 2025-01-14 12:00:00 +0800
+categories: [工具, SQL]
+tags: [SQL, 开发工具, 数据库]
+description: "专业的SQL开发辅助工具集合，包含SQL格式化工具和数据对比工具"
+---
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -295,11 +304,11 @@
                 <p>专业的SQL开发辅助工具集合</p>
             </div>
             <nav class="nav-menu">
-                <a class="nav-item active" data-tool="sql_formatter_tool.html" onclick="switch_tool(this)">
+                <a class="nav-item active" data-tool="{{ site.baseurl }}/assets/tools/sql_formatter_tool.html" onclick="switch_tool(this)">
                     <div class="nav-title">SQL格式化工具</div>
                     <div class="nav-desc">根据建表语句生成查询SQL</div>
                 </a>
-                <a class="nav-item" data-tool="sql_compare_tool.html" onclick="switch_tool(this)">
+                <a class="nav-item" data-tool="{{ site.baseurl }}/assets/tools/sql_compare_tool.html" onclick="switch_tool(this)">
                     <div class="nav-title">数据对比工具</div>
                     <div class="nav-desc">生成线上表与测试表的数据对比SQL</div>
                 </a>
@@ -319,7 +328,7 @@
                     <div class="loading-text">正在加载工具...</div>
                 </div>
                 <!-- 工具iframe -->
-                <iframe id="tool-iframe" class="tool-iframe" src="sql_formatter_tool.html"></iframe>
+                <iframe id="tool-iframe" class="tool-iframe" src="{{ site.baseurl }}/assets/tools/sql_formatter_tool.html"></iframe>
             </div>
         </div>
     </div>
@@ -327,11 +336,11 @@
     <script>
         // 工具配置信息
         const tool_configs = {
-            'sql_formatter_tool.html': {
+            '{{ site.baseurl }}/assets/tools/sql_formatter_tool.html': {
                 title: 'SQL格式化工具',
                 desc: '根据建表语句生成查询SQL'
             },
-            'sql_compare_tool.html': {
+            '{{ site.baseurl }}/assets/tools/sql_compare_tool.html': {
                 title: '数据对比工具', 
                 desc: '生成线上表与测试表的数据对比SQL'
             }

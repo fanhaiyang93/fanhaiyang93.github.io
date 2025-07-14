@@ -1,0 +1,1602 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据表对比SQL生成工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        .button-center {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #F8FAFC;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            border: 1px solid #E2E8F0;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4F46E5 0%, #6366F1 100%);
+            color: white;
+            padding: 32px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 12px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 32px;
+        }
+
+        .step {
+            margin-bottom: 32px;
+            padding: 28px;
+            background: #F8FAFC;
+            border-radius: 12px;
+            border-left: 4px solid #4F46E5;
+            border: 1px solid #E5E7EB;
+        }
+
+        .step-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1F2937;
+            margin-bottom: 24px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #4F46E5;
+            position: relative;
+        }
+
+        .step-title::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 60px;
+            height: 2px;
+            background: linear-gradient(90deg, #4F46E5, #6366F1);
+        }
+
+        .step1-inputs {
+            display: flex;
+            gap: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+            flex: 1;
+        }
+
+        .filter-inputs {
+            display: flex;
+            gap: 20px;
+        }
+
+        .input-label {
+            display: block;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 10px;
+            font-size: 15px;
+        }
+
+        .sql-textarea {
+            width: 100%;
+            height: 200px;
+            padding: 16px;
+            border: 2px solid #E5E7EB;
+            border-radius: 12px;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: 14px;
+            resize: vertical;
+            transition: all 0.2s ease;
+            background: #FAFBFC;
+        }
+
+        .sql-textarea:focus {
+            outline: none;
+            border-color: #4F46E5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+            background: white;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #4F46E5 0%, #6366F1 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 15px;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-right: 12px;
+            margin-bottom: 8px;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(79, 70, 229, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #6B7280 0%, #4B5563 100%);
+            box-shadow: 0 4px 12px rgba(107, 114, 128, 0.2);
+        }
+
+        .btn-secondary:hover {
+            box-shadow: 0 8px 25px rgba(107, 114, 128, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+        }
+
+        .btn-success:hover {
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+        }
+
+        .btn-danger:hover {
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+        }
+
+        .mapping-container {
+            display: none;
+            background: #F8FAFC;
+            border-radius: 12px;
+            padding: 32px;
+            margin-top: 24px;
+            border: 1px solid #E5E7EB;
+        }
+
+        .field-mapping {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 32px;
+            position: relative;
+        }
+
+        .field-column {
+            width: 45%;
+            z-index: 2;
+        }
+        
+        .mapping-lines-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .mapping-lines-svg {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .mapping-line {
+            stroke: #4F46E5;
+            stroke-width: 2;
+            fill: none;
+            opacity: 0.8;
+        }
+        
+        .mapping-line-primary {
+            stroke: #6366F1;
+            stroke-width: 3;
+        }
+
+        .field-column h3 {
+            color: #1F2937;
+            margin-bottom: 16px;
+            text-align: center;
+            background: white;
+            border-radius: 10px;
+            border: 2px solid #E5E7EB;
+            padding: 12px;
+            margin-left: auto;
+            margin-right: auto;
+            width: calc(100% - 40px);
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .field-list {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            border: 2px solid #E5E7EB;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .field-item {
+            padding: 14px;
+            margin-bottom: 8px;
+            background: #F8FAFC;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 4px solid transparent;
+            border: 1px solid #E5E7EB;
+        }
+
+        .field-item:hover {
+            background: #F1F5F9;
+            border-color: #CBD5E1;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .field-item.selected {
+            background: #EEF2FF;
+            border-left-color: #4F46E5;
+            border-color: #C7D2FE;
+        }
+
+        .field-item.primary-key {
+            background: #FEF3C7;
+            border-left-color: #F59E0B;
+            border-color: #FDE68A;
+        }
+
+        .field-name {
+            font-weight: 600;
+            color: #1F2937;
+        }
+
+        .field-comment {
+            font-size: 12px;
+            color: #6B7280;
+            margin-top: 4px;
+        }
+
+        .mapping-controls {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .sort-control, .collapse-control {
+            margin-right: 12px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 1px solid #D1D5DB;
+            background: white;
+            color: #374151;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .sort-control:hover, .collapse-control:hover {
+            border-color: #4F46E5;
+            color: #4F46E5;
+            box-shadow: 0 2px 8px rgba(79, 70, 229, 0.1);
+        }
+
+        .batch-control {
+            margin-right: 12px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 1px solid #D1D5DB;
+            background: white;
+            color: #374151;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .batch-control:hover {
+            border-color: #4F46E5;
+            color: #4F46E5;
+            box-shadow: 0 2px 8px rgba(79, 70, 229, 0.1);
+        }
+    
+    .collapsed .field-list {
+        display: none;
+    }
+
+        .field-column h3 {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+        }
+
+        .collapse-icon {
+            margin-left: 10px;
+        }
+        .mapping-list {
+            background: white;
+            border-radius: 10px;
+            padding: 24px;
+            margin-top: 24px;
+            border: 1px solid #E5E7EB;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .mapping-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            margin-bottom: 12px;
+            background: #F8FAFC;
+            border-radius: 8px;
+            border-left: 4px solid #4F46E5;
+            border: 1px solid #E5E7EB;
+            transition: all 0.2s ease;
+        }
+
+        .mapping-item:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .mapping-item.primary {
+            border-left-color: #F59E0B;
+            background: #FEF3C7;
+            border-color: #FDE68A;
+        }
+
+        .result-container {
+            display: none;
+            margin-top: 32px;
+        }
+
+        .result-sql {
+            background: #1F2937;
+            color: #F9FAFB;
+            padding: 24px;
+            border-radius: 12px;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            width: 100%;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #374151;
+        }
+
+        .copy-btn {
+            float: right;
+            width: auto;
+            background: linear-gradient(135deg, #4F46E5 0%, #6366F1 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(79, 70, 229, 0.2);
+        }
+
+        .copy-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .alert-info {
+            background: #e8f0ff;
+            color: #002FA7;
+            border-left: 4px solid #002FA7;
+        }
+
+        .alert-warning {
+            background: #f0f4ff;
+            color: #001A5C;
+            border-left: 4px solid #0040D9;
+        }
+
+        .progress {
+            background: #e1e5e9;
+            border-radius: 10px;
+            height: 8px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            background: linear-gradient(135deg, #002FA7 0%, #0040D9 100%);
+            height: 100%;
+            transition: width 0.3s;
+        }
+        
+        /* 自定义弹窗样式 */
+        .custom-alert {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            padding: 30px;
+            max-width: 400px;
+            min-width: 300px;
+            z-index: 10000;
+            text-align: center;
+            font-size: 16px;
+            line-height: 1.5;
+            animation: alertFadeIn 0.3s ease;
+        }
+
+        .custom-alert-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 9999;
+            animation: overlayFadeIn 0.3s ease;
+        }
+
+        @keyframes alertFadeIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+
+        @keyframes overlayFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes alertFadeOut {
+            from {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+            to {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.8);
+            }
+        }
+
+        @keyframes overlayFadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>数据表对比SQL生成工具</h1>
+            <p>自动生成线上表与测试表的数据对比SQL语句</p>
+        </div>
+
+        <div class="content">
+            <!-- 步骤1: 输入建表语句 -->
+            <div class="step" id="step1">
+                <div class="step-title">步骤1: 输入建表语句</div>
+                
+                <div class="step1-inputs">
+                    <div class="input-group">
+                        <label class="input-label">线上表建表语句:</label>
+                        <textarea id="onlineTableDDL" class="sql-textarea" placeholder="请输入线上表的CREATE TABLE语句..."></textarea>
+                    </div>
+
+                    <div class="input-group">
+                        <label class="input-label">测试表建表语句:</label>
+                        <textarea id="testTableDDL" class="sql-textarea" placeholder="请输入测试表的CREATE TABLE语句..."></textarea>
+                    </div>
+                </div>
+
+                <div class="filter-inputs">
+                    <div class="input-group">
+                        <label class="input-label">线上表检验范围:</label>
+                        <textarea id="onlineFilter" class="sql-textarea" placeholder="默认: pt='${-1d_pt}'" style="height: 80px;"></textarea>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">测试表检验范围:</label>
+                        <textarea id="testFilter" class="sql-textarea" placeholder="默认: pt='${-1d_pt}'" style="height: 80px;"></textarea>
+                    </div>
+                </div>
+
+                <div class="button-center">
+                    <button class="btn" onclick="parseTableStructure()">解析表结构</button>
+                    <button class="btn btn-secondary" onclick="loadSampleData()">加载示例数据</button>
+                </div>
+            </div>
+
+            <!-- 进度条 -->
+            <div class="progress">
+                <div class="progress-bar" id="progressBar" style="width: 25%"></div>
+            </div>
+
+            <!-- 步骤2: 字段映射 -->
+            <div class="step" id="step2">
+                <div class="step-title">步骤2: 字段映射与主键设置</div>
+                
+                <div class="mapping-container" id="mappingContainer">
+                    <div class="alert alert-info">
+                        <strong>操作说明:</strong> 点击字段进行映射，橙色标记为主键字段，蓝色标记为已映射字段
+                    </div>
+
+                    <div class="mapping-controls">
+                        <button class="btn" onclick="toggleAllCollapse()">折叠/展开字段</button>
+                        <button class="btn btn-success" onclick="autoMapping()">自动映射同名字段</button>
+                        <button class="btn btn-secondary" onclick="clearMapping()">清除所有映射</button>
+                        <!-- <button class="btn btn-success" onclick="confirmMapping()">确认映射</button> -->
+                        <button class="btn btn-secondary" onclick="sortAllFields()">按字段英文名排序</button>
+                        <button class="btn btn-secondary" onclick="sortByChineseName()">按字段中文名排序</button>
+                    </div>
+
+                    <div class="field-mapping" id="fieldMappingContainer">
+                        <div class="field-column">
+                            <h3>线上表字段</h3>
+                            <div class="field-list" id="onlineFields"></div>
+                        </div>
+                        
+                        <!-- SVG连线层 -->
+                        <div class="mapping-lines-container">
+                            <svg id="mappingLines" class="mapping-lines-svg">
+                                <!-- 连线将在这里动态生成 -->
+                            </svg>
+                        </div>
+                        
+                        <div class="field-column">
+                            <h3>测试表字段</h3>
+                            <div class="field-list" id="testFields"></div>
+                        </div>
+                    </div>
+
+                    <div class="mapping-list" id="mappingList"></div>
+                </div>
+            </div>
+
+            <!-- 步骤3: 生成SQL -->
+            <div class="step" id="step3">
+                <div class="step-title">步骤3: 生成对比SQL</div>
+                
+                <button class="btn btn-success" onclick="generateSQL()" id="generateBtn">生成对比SQL</button>
+                
+                <div class="result-container" id="resultContainer">
+                    <div class="alert alert-info">
+                        <strong>关键字段值一致性检验代码:</strong>
+                        <button class="copy-btn" onclick="copySQL()">复制SQL</button>
+                    </div>
+                    <div class="result-sql" id="resultSQL"></div>
+                    <!-- 添加统计行数输出框 -->
+                    <div class="alert alert-info" style="margin-top: 20px;">
+                        <strong>数据行数统计检验代码:</strong>
+                        <button class="copy-btn" onclick="copyTableCountSQL()">复制SQL</button>
+                    </div>
+                    <div class="result-sql" id="tableCountSQL"></div>
+                    <!-- 添加粒度唯一性检验输出框 -->
+                    <div class="alert alert-info" style="margin-top: 20px;">
+                        <strong>粒度唯一性检验代码:</strong>
+                        <button class="copy-btn" onclick="copyUniquenessCheckSQL()">复制SQL</button>
+                    </div>
+                    <div class="result-sql" id="uniquenessCheckSQL"></div>
+                    <!-- 添加测试表空值率检验输出框 -->
+                    <div class="alert alert-info" style="margin-top: 20px;">
+                        <strong>测试表字段空值率检验代码:</strong>
+                        <button class="copy-btn" onclick="copyTestNullRateCheckSQL()">复制SQL</button>
+                    </div>
+                    <div class="result-sql" id="testNullRateCheckSQL"></div>
+                </div>                    
+                </div>                    
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        let onlineTableInfo = {};
+        let testTableInfo = {};
+        let fieldMappings = [];
+        let primaryKeys = [];
+        let selectedOnlineField = null;
+        let selectedTestField = null;
+        // 保存原始字段顺序
+        let onlineFieldsOriginalOrder = [];
+        let testFieldsOriginalOrder = [];
+        // 保存排序状态
+        let isSortedByName = false;
+
+        // 排序函数
+        function sortFields(tableType) {
+            const sortSelect = document.getElementById(`${tableType}Sort`);
+            const sortOption = sortSelect.value;
+            
+            if (tableType === 'online') {
+                if (sortOption === 'name') {
+                    onlineTableInfo.fields = [...onlineFieldsOriginalOrder].sort((a, b) => 
+                        a.name.localeCompare(b.name)
+                    );
+                } else {
+                    onlineTableInfo.fields = [...onlineFieldsOriginalOrder];
+                }
+            } else {
+                if (sortOption === 'name') {
+                    testTableInfo.fields = [...testFieldsOriginalOrder].sort((a, b) => 
+                        a.name.localeCompare(b.name)
+                    );
+                } else {
+                    testTableInfo.fields = [...testFieldsOriginalOrder];
+                }
+            }
+            
+            renderFieldList(`${tableType}Fields`, tableType === 'online' ? onlineTableInfo.fields : testTableInfo.fields, tableType);
+            updateMappingLines();
+        }
+        
+        // 折叠展开函数
+        function toggleCollapse(tableType) {
+            const column = document.querySelector(`#fieldMappingContainer .field-column:nth-child(${tableType === 'online' ? 1 : 3})`);
+            column.classList.toggle('collapsed');
+            
+            const collapseIcon = column.querySelector('.collapse-icon');
+            collapseIcon.textContent = column.classList.contains('collapsed') ? '▶' : '▼';
+        }
+        
+        /**
+         * 自定义弹窗函数，替代alert，2秒后自动消失
+         * @param {string} message - 要显示的消息
+         * @param {number} duration - 显示时间（毫秒），默认2000ms
+         */
+        function showAlert(message, duration = 2000) {
+            // 创建遮罩层
+            const overlay = document.createElement('div');
+            overlay.className = 'custom-alert-overlay';
+            document.body.appendChild(overlay);
+            
+            // 创建弹窗
+            const alertBox = document.createElement('div');
+            alertBox.className = 'custom-alert';
+            alertBox.textContent = message;
+            document.body.appendChild(alertBox);
+            
+            // 设置定时器，自动关闭弹窗
+            setTimeout(() => {
+                // 添加淡出动画
+                overlay.style.animation = 'overlayFadeOut 0.3s ease forwards';
+                alertBox.style.animation = 'alertFadeOut 0.3s ease forwards';
+                
+                // 动画结束后移除元素
+                setTimeout(() => {
+                    document.body.removeChild(overlay);
+                    document.body.removeChild(alertBox);
+                }, 300);
+            }, duration);
+        }
+        
+        /**
+         * 自定义确认弹窗函数，替代confirm
+         * @param {string} message - 要显示的消息
+         * @param {function} onConfirm - 确认回调函数
+         * @param {function} onCancel - 取消回调函数（可选）
+         */
+        function showConfirm(message, onConfirm, onCancel = null) {
+            // 创建遮罩层
+            const overlay = document.createElement('div');
+            overlay.className = 'custom-alert-overlay';
+            document.body.appendChild(overlay);
+            
+            // 创建弹窗
+            const alertBox = document.createElement('div');
+            alertBox.className = 'custom-alert';
+            
+            // 添加消息
+            const messageDiv = document.createElement('div');
+            messageDiv.textContent = message;
+            messageDiv.style.marginBottom = '20px';
+            alertBox.appendChild(messageDiv);
+            
+            // 添加按钮容器
+            const buttonContainer = document.createElement('div');
+            buttonContainer.style.display = 'flex';
+            buttonContainer.style.justifyContent = 'center';
+            buttonContainer.style.gap = '10px';
+            
+            // 确认按钮
+            const confirmButton = document.createElement('button');
+            confirmButton.className = 'btn btn-success';
+            confirmButton.textContent = '确认';
+            confirmButton.style.padding = '8px 15px';
+            confirmButton.style.fontSize = '14px';
+            confirmButton.onclick = () => {
+                closeConfirm();
+                if (onConfirm) onConfirm();
+            };
+            
+            // 取消按钮
+            const cancelButton = document.createElement('button');
+            cancelButton.className = 'btn btn-secondary';
+            cancelButton.textContent = '取消';
+            cancelButton.style.padding = '8px 15px';
+            cancelButton.style.fontSize = '14px';
+            cancelButton.onclick = () => {
+                closeConfirm();
+                if (onCancel) onCancel();
+            };
+            
+            // 添加按钮到容器
+            buttonContainer.appendChild(confirmButton);
+            buttonContainer.appendChild(cancelButton);
+            alertBox.appendChild(buttonContainer);
+            
+            // 添加弹窗到页面
+            document.body.appendChild(alertBox);
+            
+            // 关闭确认框的函数
+            function closeConfirm() {
+                overlay.style.animation = 'overlayFadeOut 0.3s ease forwards';
+                alertBox.style.animation = 'alertFadeOut 0.3s ease forwards';
+                
+                setTimeout(() => {
+                    document.body.removeChild(overlay);
+                    document.body.removeChild(alertBox);
+                }, 300);
+            }
+        }
+        
+        // 添加初始化时从 localStorage 恢复数据的逻辑
+        window.addEventListener('load', function() {
+            const savedOnlineDDL = localStorage.getItem('onlineTableDDL');
+            const savedTestDDL = localStorage.getItem('testTableDDL');
+            const savedFieldMappings = localStorage.getItem('fieldMappings');
+            const savedPrimaryKeys = localStorage.getItem('primaryKeys');
+            // 新增获取保存的筛选条件
+            const savedOnlineFilter = localStorage.getItem('onlineFilter');
+            const savedTestFilter = localStorage.getItem('testFilter');
+
+            if (savedOnlineDDL) {
+                document.getElementById('onlineTableDDL').value = savedOnlineDDL;
+            }
+            if (savedTestDDL) {
+                document.getElementById('testTableDDL').value = savedTestDDL;
+            }
+            if (savedFieldMappings) {
+                fieldMappings = JSON.parse(savedFieldMappings);
+            }
+            if (savedPrimaryKeys) {
+                primaryKeys = JSON.parse(savedPrimaryKeys);
+            }
+            // 恢复筛选条件
+            if (savedOnlineFilter) {
+                document.getElementById('onlineFilter').value = savedOnlineFilter;
+            }
+            if (savedTestFilter) {
+                document.getElementById('testFilter').value = savedTestFilter;
+            }
+
+            // 移除自动解析表结构的逻辑，只有用户主动点击"解析表结构"按钮时才解析
+            updateMappingList();
+            // 保存映射关系到 localStorage
+            localStorage.setItem('fieldMappings', JSON.stringify(fieldMappings));
+        });
+
+        // 在合适的时机（例如输入框内容变化时）保存筛选条件，在页面的适当位置添加以下代码
+        document.getElementById('onlineFilter').addEventListener('input', function() {
+            localStorage.setItem('onlineFilter', this.value);
+        });
+
+        document.getElementById('testFilter').addEventListener('input', function() {
+            localStorage.setItem('testFilter', this.value);
+        });
+        
+        // 监听窗口大小变化，更新连线
+        window.addEventListener('resize', function() {
+            updateMappingLines();
+        });
+
+        /**
+         * 加载示例数据
+         */
+        function loadSampleData() {
+            document.getElementById('onlineTableDDL').value = `CREATE EXTERNAL TABLE \`dim.dim_pub_hr_empl_cho_cockpit_org_info_his_da\`(
+  \`stat_date\` string COMMENT '统计日期', 
+  \`org_code\` string COMMENT '末级组织编码', 
+  \`org_name\` string COMMENT '末级组织名称', 
+  \`org_range_code\` string COMMENT '组织范围编码', 
+  \`org_range_name\` string COMMENT '组织范围名称', 
+  \`plat_city_level1_category_code\` string COMMENT '总部城市一级分类编码', 
+  \`plat_city_level1_category_name\` string COMMENT '总部城市一级分类名称', 
+  \`plat_city_level2_category_code\` string COMMENT '总部城市二级分类编码', 
+  \`plat_city_level2_category_name\` string COMMENT '总部城市二级分类名称'
+)
+PARTITIONED BY ( 
+  \`pt\` string)
+ROW FORMAT DELIMITED 
+  FIELDS TERMINATED BY '\\u0001' 
+STORED AS INPUTFORMAT 
+  'org.apache.hadoop.hive.ql.io.orc.OrcInputFormat' 
+OUTPUTFORMAT 
+  'org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat'
+LOCATION
+  'hdfs://ns-fed/user/bigdata/dim/dim_pub_hr_empl_cho_cockpit_org_info_his_da'`;
+
+            document.getElementById('testTableDDL').value = `CREATE EXTERNAL TABLE \`dim.dim_pub_hr_empl_cho_cockpit_org_info_his_test_da\`(
+  \`stat_date\` string COMMENT '统计日期', 
+  \`org_code\` string COMMENT '末级组织编码', 
+  \`org_name\` string COMMENT '末级组织名称', 
+  \`org_range_code\` string COMMENT '组织范围编码', 
+  \`org_range_name\` string COMMENT '组织范围名称', 
+  \`plat_city_level1_category_code\` string COMMENT '总部城市一级分类编码', 
+  \`plat_city_level1_category_name\` string COMMENT '总部城市一级分类名称', 
+  \`plat_city_level2_category_code\` string COMMENT '总部城市二级分类编码', 
+  \`plat_city_level2_category_name\` string COMMENT '总部城市二级分类名称'
+)
+PARTITIONED BY ( 
+  \`pt\` string)
+ROW FORMAT DELIMITED 
+  FIELDS TERMINATED BY '\\u0001' 
+STORED AS INPUTFORMAT 
+  'org.apache.hadoop.hive.ql.io.orc.OrcInputFormat' 
+OUTPUTFORMAT 
+  'org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat'
+LOCATION
+  'hdfs://ns-fed/user/bigdata/dim/dim_pub_hr_empl_cho_cockpit_org_test_info_his_da'`;
+        }
+
+        /**
+         * 解析建表语句，提取表名和字段信息
+         */
+        function parseTableStructure() {
+            const onlineDDL = document.getElementById('onlineTableDDL').value.trim();
+            const testDDL = document.getElementById('testTableDDL').value.trim();
+
+            if (!onlineDDL || !testDDL) {
+                showAlert('请输入完整的建表语句!');
+                return;
+            }
+
+            try {
+                onlineTableInfo = parseDDL(onlineDDL);
+                testTableInfo = parseDDL(testDDL);
+
+                if (onlineTableInfo.fields.length === 0 || testTableInfo.fields.length === 0) {
+                    showAlert('解析建表语句失败，请检查语句格式!');
+                    return;
+                }
+
+                // 保存数据到 localStorage
+            localStorage.setItem('onlineTableDDL', onlineDDL);
+            localStorage.setItem('testTableDDL', testDDL);
+
+            // 显示映射界面
+            document.getElementById('mappingContainer').style.display = 'block';
+            updateProgressBar(50);
+                
+                // 保存原始顺序
+                onlineFieldsOriginalOrder = [...onlineTableInfo.fields];
+                testFieldsOriginalOrder = [...testTableInfo.fields];
+                
+                // 渲染字段列表
+                renderFieldList('onlineFields', onlineTableInfo.fields, 'online');
+                renderFieldList('testFields', testTableInfo.fields, 'test');
+
+                showAlert(`解析成功!\n线上表: ${onlineTableInfo.tableName} (${onlineTableInfo.fields.length}个字段)\n测试表: ${testTableInfo.tableName} (${testTableInfo.fields.length}个字段)`);
+            } catch (error) {
+                showAlert('解析建表语句时出错: ' + error.message);
+            }
+        }
+
+        /**
+         * 解析DDL语句
+         */
+        function parseDDL(ddl) {
+            const tableNameMatch = ddl.match(/CREATE\s+(?:EXTERNAL\s+)?TABLE\s+`?([^`\s(]+)`?/i);
+            if (!tableNameMatch) {
+                throw new Error('无法解析表名');
+            }
+
+            const tableName = tableNameMatch[1];
+            const fields = [];
+
+            // 提取字段定义部分
+            const fieldSectionMatch = ddl.match(/\(([\s\S]*?)\)\s*(?:PARTITIONED|ROW|STORED|LOCATION|$)/i);
+            if (!fieldSectionMatch) {
+                throw new Error('无法解析字段定义');
+            }
+
+            const fieldSection = fieldSectionMatch[1];
+            
+            // 解析每个字段
+            const fieldLines = fieldSection.split(',').map(line => line.trim()).filter(line => line);
+            
+            for (let line of fieldLines) {
+                // 跳过分区字段等非数据字段
+                if (line.toLowerCase().includes('partitioned by')) break;
+                
+                const fieldMatch = line.match(/`?([^`\s]+)`?\s+(\w+)(?:\s+COMMENT\s+'([^']*)')?/i);
+                if (fieldMatch) {
+                    fields.push({
+                        name: fieldMatch[1],
+                        type: fieldMatch[2],
+                        comment: fieldMatch[3] || ''
+                    });
+                }
+            }
+
+            return { tableName, fields };
+        }
+
+        /**
+         * 渲染字段列表
+         */
+        function renderFieldList(containerId, fields, tableType) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+
+            fields.forEach((field, index) => {
+                const fieldDiv = document.createElement('div');
+                fieldDiv.className = 'field-item';
+                fieldDiv.dataset.fieldName = field.name;
+                fieldDiv.dataset.tableType = tableType;
+                fieldDiv.dataset.index = index;
+
+                fieldDiv.innerHTML = `
+                    <div class="field-name">${field.name}</div>
+                    <div class="field-comment">${field.type} - ${field.comment}</div>
+                `;
+
+                fieldDiv.onclick = () => selectField(fieldDiv, field, tableType);
+                container.appendChild(fieldDiv);
+            });
+            
+            // 延迟更新连线，确保DOM已渲染
+            setTimeout(() => {
+                updateMappingLines();
+            }, 100);
+        }
+
+        /**
+         * 选择字段进行映射
+         */
+        function selectField(element, field, tableType) {
+            // 清除之前的选择
+            document.querySelectorAll('.field-item.selected').forEach(item => {
+                if (item.dataset.tableType === tableType) {
+                    item.classList.remove('selected');
+                }
+            });
+
+            element.classList.add('selected');
+
+            if (tableType === 'online') {
+                selectedOnlineField = field;
+            } else {
+                selectedTestField = field;
+            }
+
+            // 如果两个字段都选中了，创建映射
+            if (selectedOnlineField && selectedTestField) {
+                createMapping(selectedOnlineField, selectedTestField);
+                clearSelection();
+            }
+        }
+
+        /**
+         * 创建字段映射
+         */
+        function createMapping(onlineField, testField) {
+            // 检查是否已存在映射
+            const existingMapping = fieldMappings.find(m => 
+                m.onlineField === onlineField.name || m.testField === testField.name
+            );
+
+            if (existingMapping) {
+                showConfirm('字段已存在映射关系，是否覆盖?', () => {
+                    // 移除旧映射
+                    fieldMappings = fieldMappings.filter(m => m !== existingMapping);
+                    
+                    fieldMappings.push({
+                        onlineField: onlineField.name,
+                        testField: testField.name,
+                        online: onlineField,
+                        test: testField,
+                        isPrimaryKey: false
+                    });
+
+                    updateMappingList();
+                    // 保存映射关系到 localStorage
+                    localStorage.setItem('fieldMappings', JSON.stringify(fieldMappings));
+                });
+                return;
+            }
+
+            fieldMappings.push({
+                onlineField: onlineField.name,
+                testField: testField.name,
+                online: onlineField,
+                test: testField,
+                isPrimaryKey: false
+            });
+
+            updateMappingList();
+        }
+
+        /**
+         * 清除选择状态
+         */
+        function clearSelection() {
+            selectedOnlineField = null;
+            selectedTestField = null;
+            document.querySelectorAll('.field-item.selected').forEach(item => {
+                item.classList.remove('selected');
+            });
+        }
+
+        /**
+         * 自动映射同名字段
+         */
+        function autoMapping() {
+            // 检查是否已解析表结构
+            if (!onlineTableInfo.tableName || !testTableInfo.tableName) {
+                showAlert('请先输入建表语句并点击"解析表结构"!');
+                return;
+            }
+
+            fieldMappings = [];
+            
+            onlineTableInfo.fields.forEach(onlineField => {
+                const matchingTestField = testTableInfo.fields.find(testField => 
+                    testField.name === onlineField.name
+                );
+                
+                if (matchingTestField) {
+                    fieldMappings.push({
+                        onlineField: onlineField.name,
+                        testField: matchingTestField.name,
+                        online: onlineField,
+                        test: matchingTestField,
+                        isPrimaryKey: false
+                    });
+                }
+            });
+
+            updateMappingList();
+            
+            if (fieldMappings.length > 0) {
+                showAlert(`自动映射完成，共映射 ${fieldMappings.length} 个字段\n\n下一步：请设置主键字段。"`);
+            } else {
+                showAlert('未找到同名字段，请手动进行字段映射\n\n操作方法：分别点击左右两侧的字段进行映射');
+            }
+        }
+
+        /**
+         * 清除所有映射
+         */
+        function clearMapping() {
+            showConfirm('确定要清除所有映射关系吗?', () => {
+                fieldMappings = [];
+                primaryKeys = [];
+                updateMappingList();
+                // 确保清除所有连线
+                updateMappingLines();
+                // 清除 localStorage 中的映射数据
+                localStorage.removeItem('fieldMappings');
+                localStorage.removeItem('primaryKeys');
+            });
+        }
+
+        function toggleMappingListCollapse() {
+            const container = document.getElementById('mappingList');
+            const items = container.querySelectorAll('.mapping-item');
+            items.forEach(item => {
+                item.style.display = item.style.display === 'none' ? '' : 'none';
+            });
+        }        
+
+        /**
+         * 更新映射列表显示
+         */
+        function updateMappingList() {
+            const container = document.getElementById('mappingList');
+            
+            if (fieldMappings.length === 0) {
+                container.innerHTML = '<div class="alert alert-warning">暂无字段映射，请选择字段进行映射</div>';
+                return;
+            }
+
+            const primaryKeyCount = fieldMappings.filter(m => m.isPrimaryKey).length;
+            let html = `<div class="alert alert-info" style="border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+                        <h4 style="margin-top: 0; margin-bottom: 0;">字段映射关系: (${fieldMappings.length}个字段，${primaryKeyCount}个主键)
+                        <button class="btn" style="float: right; padding: 6px 8px; font-size: 12px; margin-top: 0px;" onclick="toggleMappingListCollapse()">折叠/展开字段</button></h4>
+                      </div>`;
+            
+            fieldMappings.forEach((mapping, index) => {
+                html += `<div class="mapping-item ${mapping.isPrimaryKey ? 'primary' : ''}">
+                        <div>
+                            <strong>${mapping.online.name}</strong> (${mapping.online.comment}) 
+                            ↔ 
+                            <strong>${mapping.test.name}</strong> (${mapping.test.comment}) 
+                            ${mapping.isPrimaryKey ? ' <span style="color: #0040D9;">[主键]</span>' : ''}
+                        </div>
+                        <div>
+                            <button class="btn btn-secondary" style="padding: 5px 10px; font-size: 12px; margin-right: 5px;" 
+                                    onclick="togglePrimaryKey(${index})">
+                                ${mapping.isPrimaryKey ? '取消主键' : '设为主键'}
+                            </button>
+                            <button class="btn btn-danger" style="padding: 5px 10px; font-size: 12px;" 
+                                    onclick="removeMapping(${index})">
+                                删除
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+            
+            // 更新连线显示
+            updateMappingLines();
+        }
+
+        /**
+         * 更新映射连线
+         */
+        function updateMappingLines() {
+            const svg = document.getElementById('mappingLines');
+            if (!svg) {
+                return;
+            }
+            
+            // 清除现有连线
+            svg.innerHTML = '';
+            
+            fieldMappings.forEach((mapping, index) => {
+                const onlineElement = getFieldElement(mapping.onlineField, 'online');
+                const testElement = getFieldElement(mapping.testField, 'test');
+                
+                if (onlineElement && testElement) {
+                    const line = createMappingLine(onlineElement, testElement, mapping.isPrimaryKey);
+                    svg.appendChild(line);
+                }
+            });
+        }
+
+        /**
+         * 获取字段元素
+         */
+        function getFieldElement(fieldName, tableType) {
+            const containerId = tableType === 'online' ? 'onlineFields' : 'testFields';
+            const container = document.getElementById(containerId);
+            if (!container) return null;
+            
+            // 查找包含字段名的元素
+            const elements = container.querySelectorAll('.field-item');
+            for (let i = 0; i < elements.length; i++) {
+                const element = elements[i];
+                const fieldNameElement = element.querySelector('.field-name');
+                if (fieldNameElement && fieldNameElement.textContent === fieldName) {
+                    return element;
+                }
+            }
+            return null;
+        }
+
+        // 统一排序函数
+        function sortAllFields() {
+            isSortedByName = !isSortedByName;
+            
+            if (isSortedByName) {
+                onlineTableInfo.fields = [...onlineFieldsOriginalOrder].sort((a, b) => 
+                    a.name.localeCompare(b.name)
+                );
+                testTableInfo.fields = [...testFieldsOriginalOrder].sort((a, b) => 
+                    a.name.localeCompare(b.name)
+                );
+            } else {
+                onlineTableInfo.fields = [...onlineFieldsOriginalOrder];
+                testTableInfo.fields = [...testFieldsOriginalOrder];
+            }
+            
+            renderFieldList('onlineFields', onlineTableInfo.fields, 'online');
+            renderFieldList('testFields', testTableInfo.fields, 'test');
+            updateMappingLines();
+        }
+        // 按字段中文名排序
+        function sortByChineseName() {
+            onlineTableInfo.fields = [...onlineFieldsOriginalOrder].sort((a, b) => {
+                const commentA = a.comment || '';
+                const commentB = b.comment || '';
+                return commentA.localeCompare(commentB);
+            });
+            
+            testTableInfo.fields = [...testFieldsOriginalOrder].sort((a, b) => {
+                const commentA = a.comment || '';
+                const commentB = b.comment || '';
+                return commentA.localeCompare(commentB);
+            });
+            
+            renderFieldList('onlineFields', onlineTableInfo.fields, 'online');
+            renderFieldList('testFields', testTableInfo.fields, 'test');
+            updateMappingLines();
+}        
+        // 统一折叠展开函数
+        function toggleAllCollapse() {
+            const columns = document.querySelectorAll('#fieldMappingContainer .field-column');
+            const isAllCollapsed = Array.from(columns).every(col => col.classList.contains('collapsed'));
+            
+            columns.forEach(col => {
+                if (isAllCollapsed) {
+                    col.classList.remove('collapsed');
+                } else {
+                    col.classList.add('collapsed');
+                }
+            });
+        }
+        
+        /**
+         * 创建映射连线
+         */
+        function createMappingLine(fromElement, toElement, isPrimaryKey) {
+            const mappingContainer = document.getElementById('fieldMappingContainer');
+            const containerRect = mappingContainer.getBoundingClientRect();
+            
+            const fromRect = fromElement.getBoundingClientRect();
+            const toRect = toElement.getBoundingClientRect();
+            
+            // 计算相对于容器的坐标
+            const fromX = fromRect.right - containerRect.left;
+            const fromY = fromRect.top + fromRect.height / 2 - containerRect.top;
+            const toX = toRect.left - containerRect.left;
+            const toY = toRect.top + toRect.height / 2 - containerRect.top;
+            
+            // 创建SVG路径
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            const midX = (fromX + toX) / 2;
+            const pathData = `M ${fromX} ${fromY} C ${midX} ${fromY}, ${midX} ${toY}, ${toX} ${toY}`;
+            
+            path.setAttribute('d', pathData);
+            path.setAttribute('class', isPrimaryKey ? 'mapping-line mapping-line-primary' : 'mapping-line');
+            
+            return path;
+        }
+
+        /**
+         * 切换主键状态
+         */
+        function togglePrimaryKey(index) {
+            fieldMappings[index].isPrimaryKey = !fieldMappings[index].isPrimaryKey;
+            updateMappingList();
+            // 保存映射关系到 localStorage
+            localStorage.setItem('fieldMappings', JSON.stringify(fieldMappings));
+        }
+
+        /**
+         * 移除映射
+         */
+        function removeMapping(index) {
+            showConfirm('确定要删除这个映射关系吗?', () => {
+                fieldMappings.splice(index, 1);
+                updateMappingList();
+                updateMappingLines();
+                // 保存映射关系到 localStorage
+                localStorage.setItem('fieldMappings', JSON.stringify(fieldMappings));
+            });
+        }
+
+        /**
+         * 确认映射配置
+         */
+        function confirmMapping() {
+            if (fieldMappings.length === 0) {
+                showAlert('请至少配置一个字段映射!\n\n请先点击"自动映射同名字段"或手动选择字段进行映射');
+                return;
+            }
+
+            const primaryKeyMappings = fieldMappings.filter(m => m.isPrimaryKey);
+            if (primaryKeyMappings.length === 0) {
+                showAlert('请至少设置一个主键字段!\n\n在字段映射列表中，点击字段旁边的"设为主键"按钮');
+                return;
+            }
+
+            updateProgressBar(75);
+            document.getElementById('generateBtn').disabled = false;
+            showAlert(`映射配置完成!\n共 ${fieldMappings.length} 个字段映射\n其中 ${primaryKeyMappings.length} 个主键字段\n\n现在可以点击"生成对比SQL"按钮了！`);
+        }
+
+        /**
+         * 生成对比SQL
+         */
+        function generateSQL() {
+            // 检查是否已解析表结构
+            if (!onlineTableInfo.tableName || !testTableInfo.tableName) {
+                showAlert('请先输入建表语句并点击"解析表结构"!');
+                return;
+            }
+
+            if (fieldMappings.length === 0) {
+                showAlert('请先配置字段映射!\n\n操作步骤:\n1. 点击"自动映射同名字段"或手动选择字段进行映射\n2. 设置至少一个主键字段\n3. 点击"确认映射"');
+                return;
+            }
+
+            const primaryKeyMappings = fieldMappings.filter(m => m.isPrimaryKey);
+            if (primaryKeyMappings.length === 0) {
+                showAlert('请至少设置一个主键字段!\n\n在字段映射列表中，点击字段旁边的"设为主键"按钮');
+                return;
+            }
+
+            try {
+                const sql = buildCompareSQL();
+                document.getElementById('resultSQL').textContent = sql;
+                // 获取用户输入的筛选条件，若未输入则使用默认条件
+                const onlineFilter = document.getElementById('onlineFilter').value || "where pt='\${-1d_pt}'";
+                const testFilter = document.getElementById('testFilter').value || "where pt='\${-1d_pt}'";
+
+                // 生成统计线上表行数的SQL
+                const tableCountSQL = `select
+     t1.cnt as onlinetable_cnt 
+    ,t2.cnt as testtable_cnt 
+    ,(t1.cnt - t2.cnt) as diff_cnt
+from 
+(
+    SELECT \n     COUNT(*) as cnt \nFROM ${onlineTableInfo.tableName} \n${onlineFilter}   
+) t1 
+join 
+(
+    SELECT \n     COUNT(*) as cnt \nFROM ${testTableInfo.tableName} \n${testFilter}
+) t2
+on 1 = 1    
+                `; 
+                document.getElementById('tableCountSQL').textContent = tableCountSQL;
+
+                // 生成粒度唯一性检验SQL，示例中以线上表作为待验表，测试表作为基准表
+                // 需根据实际字段名调整，这里假设字段名和示例相同
+                const onlineUniqueFields = primaryKeyMappings.map(m => m.onlineField).join(', ');
+                const testUniqueFields = primaryKeyMappings.map(m => m.testField).join(', ');
+                const uniquenessCheckSQL = `\nselect 
+    '待验表' as table_name 
+    ,${onlineUniqueFields} 
+    ,count(*) as cnt 
+from ${onlineTableInfo.tableName} 
+${onlineFilter} 
+group by ${onlineUniqueFields} 
+having count(*) > 1 \n 
+union all 
+select 
+    '基准表' as table_name 
+    ,${testUniqueFields}
+    ,count(*) as cnt 
+from ${testTableInfo.tableName} 
+${testFilter} 
+group by ${testUniqueFields} 
+having count(*) > 1 \n`;
+                document.getElementById('uniquenessCheckSQL').textContent = uniquenessCheckSQL;
+
+                // 生成测试表字段空值率检验SQL
+                if (testTableInfo.fields && testTableInfo.fields.length > 0) {
+                    let nullRateSelect = 'select';
+                    testTableInfo.fields.forEach((field, index) => {
+                        nullRateSelect += `\n       sum(case when ${field.name} is null or ${field.name} = 'null' then 1 else 0 end)/count(*) as ${field.name}_null_rate${index < testTableInfo.fields.length - 1 ? ',' : ''}`;
+                    });
+                    const nullRateSQL = `${nullRateSelect}\nfrom ${testTableInfo.tableName}\n${testFilter} `;
+                    document.getElementById('testNullRateCheckSQL').textContent = nullRateSQL;
+                }
+
+                document.getElementById('resultContainer').style.display = 'block';
+                updateProgressBar(100);
+
+                // 启用按钮（如果之前被禁用）
+                document.getElementById('generateBtn').disabled = false;
+
+                // 滚动到结果区域
+                document.getElementById('resultContainer').scrollIntoView({ behavior: 'smooth' });
+
+                // showAlert('SQL生成成功！请查看下方结果。');
+            } catch (error) {
+                showAlert('生成SQL时出错: ' + error.message);
+                console.error('SQL生成错误:', error);
+            }
+        }
+
+        // 添加复制统计SQL的函数
+        function copyTableCountSQL() {
+            const sqlText = document.getElementById('tableCountSQL').textContent;
+            navigator.clipboard.writeText(sqlText).then(() => {
+                showAlert('线上表统计SQL已复制到剪贴板!');
+            }).catch(err => {
+                console.error('复制失败:', err);
+                // 降级方案
+                const textArea = document.createElement('textarea');
+                textArea.value = sqlText;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showAlert('线上表统计SQL已复制到剪贴板!');
+            });
+        }
+
+        function copyTestCountSQL() {
+            const sqlText = document.getElementById('testCountSQL').textContent;
+            navigator.clipboard.writeText(sqlText).then(() => {
+                showAlert('测试表统计SQL已复制到剪贴板!');
+            }).catch(err => {
+                console.error('复制失败:', err);
+                // 降级方案
+                const textArea = document.createElement('textarea');
+                textArea.value = sqlText;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showAlert('测试表统计SQL已复制到剪贴板!');
+            });
+        }
+
+        // 添加复制粒度唯一性检验SQL的函数
+        function copyUniquenessCheckSQL() {
+            const sqlText = document.getElementById('uniquenessCheckSQL').textContent;
+            navigator.clipboard.writeText(sqlText).then(() => {
+                showAlert('粒度唯一性检验SQL已复制到剪贴板!');
+            }).catch(err => {
+                console.error('复制失败:', err);
+                // 降级方案
+                const textArea = document.createElement('textarea');
+                textArea.value = sqlText;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showAlert('粒度唯一性检验SQL已复制到剪贴板!');
+            });
+        }
+
+        // 添加复制测试表空值率检验SQL的函数
+        function copyTestNullRateCheckSQL() {
+            const sqlText = document.getElementById('testNullRateCheckSQL').textContent;
+            navigator.clipboard.writeText(sqlText).then(() => {
+                showAlert('测试表字段空值率检验SQL已复制到剪贴板!');
+            }).catch(err => {
+                console.error('复制失败:', err);
+                // 降级方案
+                const textArea = document.createElement('textarea');
+                textArea.value = sqlText;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showAlert('测试表字段空值率检验SQL已复制到剪贴板!');
+            });
+        }        
+
+        /**
+         * 构建"关键字段值一致性"对比SQL语句
+         */
+        function buildCompareSQL() {
+            const primaryKeyMappings = fieldMappings.filter(m => m.isPrimaryKey);
+            const dataFieldMappings = fieldMappings.filter(m => !m.isPrimaryKey);
+
+            // 获取用户输入的筛选条件，若未输入则使用默认条件
+            const onlineFilter = document.getElementById('onlineFilter').value || "where pt='\${-1d_pt}'";
+            const testFilter = document.getElementById('testFilter').value || "where pt='\${-1d_pt}'";
+
+            // 构建SELECT子句
+            let selectClause = `select
+    CASE
+        WHEN t1.${primaryKeyMappings[0].onlineField} IS NULL THEN '左表缺失'
+        WHEN t2.${primaryKeyMappings[0].testField} IS NULL THEN '右表缺失'
+        ELSE '字段不一致'
+    END as diff_type`;
+
+            // 添加主键字段
+            primaryKeyMappings.forEach(mapping => {
+                selectClause += `\n    ,t1.${mapping.onlineField}`;
+            });
+
+            // 添加数据字段对比
+            dataFieldMappings.forEach(mapping => {
+                selectClause += `\n    ,if(nvl(t1.${mapping.onlineField},'')<>nvl(t2.${mapping.testField},''), CONCAT_WS(',' , nvl(t1.${mapping.onlineField},'null'), nvl(t2.${mapping.testField},'null')),t1.${mapping.onlineField}) as ${mapping.onlineField}`;
+            });
+
+            // 构建FROM子句 - 线上表
+            let fromClause = `\nfrom\n(\n    select`;
+            fieldMappings.forEach((mapping, index) => {
+                fromClause += `${index === 0 ? '\n        ' : '\n        ,'}cast(${mapping.onlineField} as string) as ${mapping.onlineField}`;
+            });
+            fromClause += `\n    from ${onlineTableInfo.tableName}\n    ${onlineFilter}\n) t1`;
+
+            // 构建JOIN子句 - 测试表
+            fromClause += `\nfull outer join\n(\n    select`;
+            fieldMappings.forEach((mapping, index) => {
+                fromClause += `${index === 0 ? '\n        ' : '\n        ,'}cast(${mapping.testField} as string) as ${mapping.testField}`;
+            });
+            fromClause += `\n    from ${testTableInfo.tableName}\n    ${testFilter}\n) t2`;
+
+            // 构建ON子句
+            let onClause = '\non ';
+            primaryKeyMappings.forEach((mapping, index) => {
+                onClause += `${index === 0 ? '' : ' and '}t1.${mapping.onlineField}=t2.${mapping.testField}`;
+            });
+
+            // 构建WHERE子句
+            let whereClause = '\nwhere ';
+            primaryKeyMappings.forEach((mapping, index) => {
+                whereClause += `${index === 0 ? '' : ' or '}t1.${mapping.onlineField} is null or t2.${mapping.testField} is null`;
+            });
+            
+            dataFieldMappings.forEach(mapping => {
+                whereClause += `\nor nvl(t1.${mapping.onlineField},'')<>nvl(t2.${mapping.testField},'')`;
+            });
+
+            return selectClause + fromClause + onClause + whereClause;
+        }
+
+        /**
+         * 复制SQL到剪贴板
+         */
+        function copySQL() {
+            const sqlText = document.getElementById('resultSQL').textContent;
+            navigator.clipboard.writeText(sqlText).then(() => {
+                showAlert('SQL已复制到剪贴板!');
+            }).catch(err => {
+                console.error('复制失败:', err);
+                // 降级方案
+                const textArea = document.createElement('textarea');
+                textArea.value = sqlText;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showAlert('SQL已复制到剪贴板!');
+            });
+        }
+
+        /**
+         * 更新进度条
+         */
+        function updateProgressBar(percentage) {
+            document.getElementById('progressBar').style.width = percentage + '%';
+        }
+    </script>
+</body>
+</html>
+
